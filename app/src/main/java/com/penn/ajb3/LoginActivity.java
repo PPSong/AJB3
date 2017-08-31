@@ -3,6 +3,7 @@ package com.penn.ajb3;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -211,6 +212,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     Log.v("ppLog", s);
                                     Log.v("ppLog", PPApplication.ppFromString(s, "token").getAsString());
                                     PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    startActivity(intent);
                                 }
                             },
                             new Consumer<Throwable>() {
