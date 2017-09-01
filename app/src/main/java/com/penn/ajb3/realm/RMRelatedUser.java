@@ -10,6 +10,7 @@ import io.realm.annotations.PrimaryKey;
 public class RMRelatedUser extends RealmObject {
     @PrimaryKey
     public String _id;
+    public String username;
     public String nickname;
     public String sex;
     public String avatar;
@@ -25,6 +26,14 @@ public class RMRelatedUser extends RealmObject {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public String followState() {
+        if (isFriends) {
+            return "互相关注";
+        } else {
+            return "已关注";
         }
     }
 }

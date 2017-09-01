@@ -20,7 +20,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class PPRetrofit {
     private static PPRetrofit instance = null;
 //    public static final String BASE_URL = "http://10.0.13.232:3000/";
-    public static final String BASE_URL = "http://192.168.100.100:3000/";
+//    public static final String BASE = "http://192.168.100.100";
+    public static final String BASE = "http://192.168.150.133";
+    public static final String BASE_URL = BASE + ":3000/";
+    public static final String SOCKET_URL = BASE + ":3001";
 
     private PPService ppService;
 
