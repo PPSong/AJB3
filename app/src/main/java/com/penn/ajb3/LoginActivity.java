@@ -47,6 +47,7 @@ import retrofit2.Response;
 
 import static android.Manifest.permission.EXPAND_STATUS_BAR;
 import static android.Manifest.permission.READ_CONTACTS;
+import static com.penn.ajb3.PPApplication.initLocalData;
 
 /**
  * A login screen that offers login via email/password.
@@ -212,6 +213,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     Log.v("ppLog", s);
                                     Log.v("ppLog", PPApplication.ppFromString(s, "token").getAsString());
                                     PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
+                                    PPApplication.initLocalData();
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
                                 }
