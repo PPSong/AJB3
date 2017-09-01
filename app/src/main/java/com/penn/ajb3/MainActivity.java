@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,11 +20,26 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
+import com.github.nkzawa.emitter.Emitter;
+import com.github.nkzawa.socketio.client.IO;
 import com.penn.ajb3.databinding.ActivityMainBinding;
+import com.penn.ajb3.util.PPRetrofit;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.Socket;
+import java.net.URISyntaxException;
+
+import static android.R.attr.type;
+import static com.penn.ajb3.PPApplication.AUTH_BODY;
+import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+
+    private com.github.nkzawa.socketio.client.Socket socket;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -56,6 +72,30 @@ public class MainActivity extends AppCompatActivity {
         mViewPager.setOffscreenPageLimit(3);
 
         binding.tabs.setupWithViewPager(mViewPager);
+
+        try {
+            socket = IO.socket(PPRetrofit.SOCKET_URL);
+        } catch (URISyntaxException e) {
+            Log.v("ppLog", "socket exception:" + e.toString());
+        }
+
+        socket.on("pushEvent", new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                String typeString = args[0].toString();
+                PPApplication.getPush(ppFromString(typeString, "type").getAsString());
+            }
+        });
+
+        socket.on("needYourUserId", new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                socket.emit("giveMyUserId", PPApplication.getPrefStringValue("MY_ID", "NONE"));
+            }
+        });
+        socket.connect();
 
         FloatingActionButton fab = binding.fab;
         fab.setOnClickListener(new View.OnClickListener() {
