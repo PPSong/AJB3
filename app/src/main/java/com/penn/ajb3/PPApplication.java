@@ -198,7 +198,7 @@ public class PPApplication extends Application {
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFollows(startTime);
 
         result.subscribeOn(Schedulers.newThread())
-//                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         new Consumer<String>() {
                             @Override
@@ -221,7 +221,9 @@ public class PPApplication extends Application {
                                                 if (delete) {
                                                     if (obj != null) {
                                                         obj.isFollows = false;
-                                                        obj.delete();
+                                                        Log.v("ppLog", "getNewFollows delete start");
+                                                        obj.delete2();
+                                                        Log.v("ppLog", "getNewFollows delete end");
                                                     }
                                                 } else {
                                                     if (obj == null) {
@@ -274,7 +276,7 @@ public class PPApplication extends Application {
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFans(startTime);
 
         result.subscribeOn(Schedulers.newThread())
-//                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         new Consumer<String>() {
                             @Override
@@ -350,7 +352,7 @@ public class PPApplication extends Application {
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFriends(startTime);
 
         result.subscribeOn(Schedulers.newThread())
-//                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         new Consumer<String>() {
                             @Override

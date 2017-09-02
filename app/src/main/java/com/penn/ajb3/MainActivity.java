@@ -182,6 +182,10 @@ public class MainActivity extends AppCompatActivity {
             // Return a PlaceholderFragment (defined as a static inner class below).
             if (position == 0) {
                 return FollowsFragment.newInstance(null, null);
+            } else if (position == 1) {
+                return FansFragment.newInstance(null, null);
+            } else if (position == 2) {
+                return FriendsFragment.newInstance(null, null);
             } else {
                 return PlaceholderFragment.newInstance(position + 1);
             }

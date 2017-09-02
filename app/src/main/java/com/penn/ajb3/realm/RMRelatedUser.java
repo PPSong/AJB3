@@ -1,5 +1,7 @@
 package com.penn.ajb3.realm;
 
+import android.util.Log;
+
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
@@ -21,7 +23,20 @@ public class RMRelatedUser extends RealmObject {
     public boolean isFriends;
 
     public boolean delete() {
+        Log.v("ppLog", "delete1 1");
         if (!isFollows && !isFans && !isFriends) {
+            Log.v("ppLog", "delete1 2");
+            deleteFromRealm();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean delete2() {
+        Log.v("ppLog", "delete2 1");
+        if (!isFollows && !isFans && !isFriends) {
+            Log.v("ppLog", "delete2 2");
             deleteFromRealm();
             return true;
         } else {
@@ -30,6 +45,8 @@ public class RMRelatedUser extends RealmObject {
     }
 
     public String followState() {
+        Log.v("ppLog", "followState");
+
         if (isFriends) {
             return "互相关注";
         } else {
