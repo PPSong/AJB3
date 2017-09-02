@@ -177,10 +177,10 @@ public class PPApplication extends Application {
 
         Realm.setDefaultConfiguration(config);
 
-        getMyProfile(true);
+        reconnectToServer();
     }
 
-    public static void getMyProfile(final boolean init) {
+    public static void reconnectToServer() {
         Observable<String> result = PPRetrofit.getInstance().getPPService().getMyProfile();
 
         result.subscribeOn(Schedulers.newThread())
@@ -213,11 +213,9 @@ public class PPApplication extends Application {
                                     });
                                 }
 
-                                if (init) {
-                                    getNewFollows();
-                                    getNewFans();
-                                    getNewFriends();
-                                }
+                                getNewFollows();
+                                getNewFans();
+                                getNewFriends();
                             }
                         },
                         new Consumer<Throwable>() {

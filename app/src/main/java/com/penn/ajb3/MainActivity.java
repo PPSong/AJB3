@@ -39,6 +39,8 @@ import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 import static android.R.attr.type;
+import static com.github.nkzawa.socketio.client.Socket.EVENT_CONNECT;
+import static com.github.nkzawa.socketio.client.Socket.EVENT_DISCONNECT;
 import static com.penn.ajb3.PPApplication.AUTH_BODY;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
@@ -106,6 +108,27 @@ public class MainActivity extends AppCompatActivity {
                 socket.emit("giveMyUserId", PPApplication.getPrefStringValue("MY_ID", "NONE"));
             }
         });
+
+        socket.on(EVENT_CONNECT, new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                Log.v("ppLog", "EVENT_CONNECT");
+                PPApplication.reconnectToServer();
+            }
+
+        });
+
+        //todo 为什么没有触发
+        socket.on(EVENT_DISCONNECT, new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                Log.v("ppLog", "EVENT_DISCONNECT");
+            }
+
+        });
+
         socket.connect();
 
         realm = Realm.getDefaultInstance();
