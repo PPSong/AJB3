@@ -36,5 +36,12 @@ public interface PPService {
     @POST("getMyProfile")
     Observable<String> getMyProfile();
 
+    @POST("unFollow/{userId}")
+    Observable<String> unFollow(@Path("userId") String userId);
 
+    @POST("unFriend/{userId}")
+    Observable<String> unFriend(@Path("userId") String userId);
+
+    @POST("follow/{userId}")
+    Observable<String> follow(@Path("userId") String userId);
 }

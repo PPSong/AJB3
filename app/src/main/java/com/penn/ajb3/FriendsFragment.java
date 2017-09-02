@@ -4,6 +4,7 @@ import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,12 +16,18 @@ import android.view.ViewGroup;
 import com.penn.ajb3.databinding.FriendsUserCellBinding;
 import com.penn.ajb3.databinding.FragmentFriendsBinding;
 import com.penn.ajb3.realm.RMRelatedUser;
+import com.penn.ajb3.util.PPRetrofit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
+import retrofit2.HttpException;
 
 
 /**
@@ -55,16 +62,54 @@ public class FriendsFragment extends Fragment {
 
         public class RelatedUserVH extends RecyclerView.ViewHolder {
             private FriendsUserCellBinding binding;
+            private String userId;
 
             public RelatedUserVH(FriendsUserCellBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
+
+                binding.unFriendBt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().unFriend(userId);
+
+                        result.subscribeOn(Schedulers.newThread())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                        new Consumer<String>() {
+                                            @Override
+                                            public void accept(@NonNull final String s) throws Exception {
+                                                if (s.equals("ok")) {
+
+                                                } else {
+                                                    Log.v("ppLog", "unFriend failed:" + s);
+                                                }
+                                            }
+                                        },
+                                        new Consumer<Throwable>() {
+                                            @Override
+                                            public void accept(@NonNull Throwable throwable) {
+                                                try {
+                                                    if (throwable instanceof HttpException) {
+                                                        HttpException exception = (HttpException) throwable;
+                                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
+                                                    } else {
+                                                        Log.v("ppLog", throwable.toString());
+                                                    }
+                                                } catch (Exception e) {
+                                                    Log.v("ppLog", e.toString());
+                                                }
+                                            }
+                                        });
+                    }
+                });
             }
 
             public void bind(RMRelatedUser rmRelatedUser) {
                 //一定要加下面这句, 把记录从realm中copy出来成为unmanaged object, 以防止在setData过程中原来的记录被删除而导致程序崩溃
                 RMRelatedUser tmp = realm.copyFromRealm(rmRelatedUser);
                 binding.setData(tmp);
+                userId = tmp._id;
             }
         }
     }

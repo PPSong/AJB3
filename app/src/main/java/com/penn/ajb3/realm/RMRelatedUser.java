@@ -1,6 +1,7 @@
 package com.penn.ajb3.realm;
 
 import android.util.Log;
+import android.view.View;
 
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -52,5 +53,27 @@ public class RMRelatedUser extends RealmObject {
         } else {
             return "已关注";
         }
+    }
+
+    public String fansState() {
+        Log.v("ppLog", "fansState");
+
+        if (isFriends) {
+            return "互相关注";
+        } else {
+            return "已关注你";
+        }
+    }
+
+    public int unFollowable() {
+        return (isFollows && !isFriends) ? View.VISIBLE : View.INVISIBLE;
+    }
+
+    public int unFriendable() {
+        return isFriends ? View.VISIBLE : View.INVISIBLE;
+    }
+
+    public int followable() {
+        return (isFans && !isFollows && !isFriends) ? View.VISIBLE : View.INVISIBLE;
     }
 }

@@ -19,7 +19,12 @@
             android:layout_height="match_parent"
             android:text="@{data.nickname}" />
 
-
+        <Button
+            android:id="@+id/un_friend_bt"
+            android:visibility="@{data.unFriendable}"
+            android:text="取消好友"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

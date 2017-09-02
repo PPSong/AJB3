@@ -24,6 +24,13 @@
             android:layout_height="wrap_content"
             android:text="@{data.followState}" />
 
+        <Button
+            android:id="@+id/un_follow_bt"
+            android:visibility="@{data.unFollowable}"
+            android:text="取消关注"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
     </LinearLayout>
 
 </layout>

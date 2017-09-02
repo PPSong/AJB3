@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.penn.ajb3.databinding.ActivityMainBinding;
+import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
 import org.json.JSONException;
@@ -31,15 +32,25 @@ import org.json.JSONObject;
 import java.net.Socket;
 import java.net.URISyntaxException;
 
+import io.realm.OrderedCollectionChangeSet;
+import io.realm.OrderedRealmCollectionChangeListener;
+import io.realm.Realm;
+import io.realm.RealmChangeListener;
+import io.realm.RealmResults;
+
 import static android.R.attr.type;
 import static com.penn.ajb3.PPApplication.AUTH_BODY;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class MainActivity extends AppCompatActivity {
 
+    private Realm realm;
+
     private ActivityMainBinding binding;
 
     private com.github.nkzawa.socketio.client.Socket socket;
+
+    private RealmResults<RMRelatedUser> relatedUsers;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -97,15 +108,23 @@ public class MainActivity extends AppCompatActivity {
         });
         socket.connect();
 
-        FloatingActionButton fab = binding.fab;
-        fab.setOnClickListener(new View.OnClickListener() {
+        realm = Realm.getDefaultInstance();
+        relatedUsers = realm.where(RMRelatedUser.class).findAll();
+        relatedUsers.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMRelatedUser>>() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onChange(RealmResults<RMRelatedUser> rmRelatedUsers, OrderedCollectionChangeSet changeSet) {
+                updateRelatedUserCount();
             }
         });
 
+        updateRelatedUserCount();
+        Log.v("ppLog", "onCreate on MainActivity end");
+    }
+
+    @Override
+    protected void onDestroy() {
+        realm.close();
+        super.onDestroy();
     }
 
     @Override
@@ -209,5 +228,16 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
+    }
+
+    private void updateRelatedUserCount() {
+        Log.v("ppLog", "updateRelatedUserCount");
+        binding.relatedUserCount.setText(
+                realm.where(RMRelatedUser.class).equalTo("isFollows", true).count()
+                        + ","
+                        + realm.where(RMRelatedUser.class).equalTo("isFans", true).count()
+                        + ","
+                        + realm.where(RMRelatedUser.class).equalTo("isFriends", true).count()
+        );
     }
 }

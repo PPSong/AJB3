@@ -19,7 +19,17 @@
             android:layout_height="match_parent"
             android:text="@{data.nickname}" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{data.fansState}" />
 
+        <Button
+            android:id="@+id/follow_bt"
+            android:visibility="@{data.followable}"
+            android:text="关注"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 
