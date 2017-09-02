@@ -232,7 +232,6 @@ public class OtherUsersFragment extends Fragment {
                                     obj.avatar = ppFromString(itemStr, "avatar").getAsString();
 
                                     otherUsers.add(obj);
-                                    Log.v("ppLog", "length:" + otherUsers.size());
                                 }
                             }
                         },

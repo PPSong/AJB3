@@ -170,7 +170,7 @@ public class PPApplication extends Application {
                 .name(username + ".realm")
                 .build();
 
-        boolean clearData = true;
+        boolean clearData = false;
         if (clearData) {
             Realm.deleteRealm(config);
         }
@@ -254,7 +254,7 @@ public class PPApplication extends Application {
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                            long time = 0;
+                                            long time = -1;
 
                                             for (JsonElement item : users) {
 //                                                Log.v("ppLog Follows", item.toString());
@@ -297,7 +297,9 @@ public class PPApplication extends Application {
                                             }
 
                                             //更新时间戳
-                                            realm.where(RMMyProfile.class).findFirst().getNewFollowsTime = time;
+                                            if (time > -1) {
+                                                realm.where(RMMyProfile.class).findFirst().getNewFollowsTime = time;
+                                            }
                                         }
                                     });
                                 }
@@ -339,7 +341,7 @@ public class PPApplication extends Application {
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                            long time = 0;
+                                            long time = -1;
 
                                             for (JsonElement item : users) {
 //                                                Log.v("ppLog Fans", item.toString());
@@ -380,7 +382,9 @@ public class PPApplication extends Application {
                                             }
 
                                             //更新时间戳
-                                            realm.where(RMMyProfile.class).findFirst().getNewFansTime = time;
+                                            if (time > -1) {
+                                                realm.where(RMMyProfile.class).findFirst().getNewFansTime = time;
+                                            }
                                         }
                                     });
                                 }
@@ -422,7 +426,7 @@ public class PPApplication extends Application {
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                            long time = 0;
+                                            long time = -1;
 
                                             for (JsonElement item : users) {
                                                 Log.v("ppLog Friends", item.toString());
@@ -462,7 +466,9 @@ public class PPApplication extends Application {
                                             }
 
                                             //更新时间戳
-                                            realm.where(RMMyProfile.class).findFirst().getNewFriendsTime = time;
+                                            if (time > -1) {
+                                                realm.where(RMMyProfile.class).findFirst().getNewFriendsTime = time;
+                                            }
                                         }
                                     });
                                 }
