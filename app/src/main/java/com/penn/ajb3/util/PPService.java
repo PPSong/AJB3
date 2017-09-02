@@ -32,4 +32,9 @@ public interface PPService {
 
     @POST("getNewFriends/{startTime}")
     Observable<String> getNewFriends(@Path("startTime") long startTime);
+
+    @POST("getMyProfile")
+    Observable<String> getMyProfile();
+
+
 }

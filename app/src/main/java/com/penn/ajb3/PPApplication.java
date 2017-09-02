@@ -12,6 +12,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
@@ -176,24 +177,70 @@ public class PPApplication extends Application {
 
         Realm.setDefaultConfiguration(config);
 
-        getMyProfile();
-        getNewFollows();
-        getNewFans();
-        getNewFriends();
+        getMyProfile(true);
     }
 
-    public static void getMyProfile() {
-        //todo getMyProfile
+    public static void getMyProfile(final boolean init) {
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getMyProfile();
+
+        result.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        new Consumer<String>() {
+                            @Override
+                            public void accept(@NonNull final String s) throws Exception {
+                                try (Realm realm = Realm.getDefaultInstance()) {
+                                    realm.executeTransaction(new Realm.Transaction() {
+                                        @Override
+                                        public void execute(Realm realm) {
+                                            String itemStr = ppFromString(s, null).toString();
+                                            RMMyProfile obj = realm.where(RMMyProfile.class).findFirst();
+
+                                            if (obj == null) {
+                                                obj = new RMMyProfile();
+                                                obj._id = ppFromString(itemStr, "_id").getAsString();
+                                            }
+                                            obj.username = ppFromString(itemStr, "username").getAsString();
+                                            obj.nickname = ppFromString(itemStr, "nickname").getAsString();
+                                            obj.sex = ppFromString(itemStr, "sex").getAsString();
+                                            obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+                                            obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
+
+                                            // This will update an existing object with the same primary key
+                                            // or create a new object if an object with no primary key = _id
+                                            realm.copyToRealmOrUpdate(obj);
+                                        }
+                                    });
+                                }
+
+                                if (init) {
+                                    getNewFollows();
+                                    getNewFans();
+                                    getNewFriends();
+                                }
+                            }
+                        },
+                        new Consumer<Throwable>() {
+                            @Override
+                            public void accept(@NonNull Throwable throwable) {
+                                try {
+                                    if (throwable instanceof HttpException) {
+                                        HttpException exception = (HttpException) throwable;
+                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
+                                    } else {
+                                        Log.v("ppLog", throwable.toString());
+                                    }
+                                } catch (Exception e) {
+                                    Log.v("ppLog", e.toString());
+                                }
+                            }
+                        });
     }
 
     public static void getNewFollows() {
-        long startTime = 0;
+        long startTime;
         try (Realm realm = Realm.getDefaultInstance()) {
-            Number tmpNum = realm.where(RMRelatedUser.class).equalTo("isFollows", true).max("updateTime");
-            if (tmpNum != null) {
-                startTime = tmpNum.longValue();
-            }
-            Log.v("ppLog", "" + startTime);
+            startTime = realm.where(RMMyProfile.class).findFirst().getNewFollowsTime;
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFollows(startTime);
 
@@ -208,10 +255,18 @@ public class PPApplication extends Application {
                                         @Override
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
+
+                                            long time = 0;
+
                                             for (JsonElement item : users) {
-                                                Log.v("ppLog", item.toString());
+//                                                Log.v("ppLog Follows", item.toString());
 
                                                 String itemStr = item.toString();
+
+                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                                if (itemTime > time) {
+                                                    time = itemTime;
+                                                }
 
                                                 String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
                                                 boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
@@ -242,6 +297,9 @@ public class PPApplication extends Application {
                                                     realm.copyToRealmOrUpdate(obj);
                                                 }
                                             }
+
+                                            //更新时间戳
+                                            realm.where(RMMyProfile.class).findFirst().getNewFollowsTime = time;
                                         }
                                     });
                                 }
@@ -265,13 +323,9 @@ public class PPApplication extends Application {
     }
 
     public static void getNewFans() {
-        long startTime = 0;
+        long startTime;
         try (Realm realm = Realm.getDefaultInstance()) {
-            Number tmpNum = realm.where(RMRelatedUser.class).equalTo("isFans", true).max("updateTime");
-            if (tmpNum != null) {
-                startTime = tmpNum.longValue();
-            }
-            Log.v("ppLog", "" + startTime);
+            startTime = realm.where(RMMyProfile.class).findFirst().getNewFansTime;
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFans(startTime);
 
@@ -286,10 +340,18 @@ public class PPApplication extends Application {
                                         @Override
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
+
+                                            long time = 0;
+
                                             for (JsonElement item : users) {
-                                                Log.v("ppLog", item.toString());
+//                                                Log.v("ppLog Fans", item.toString());
 
                                                 String itemStr = item.toString();
+
+                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                                if (itemTime > time) {
+                                                    time = itemTime;
+                                                }
 
                                                 String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
                                                 boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
@@ -318,6 +380,9 @@ public class PPApplication extends Application {
                                                     realm.copyToRealmOrUpdate(obj);
                                                 }
                                             }
+
+                                            //更新时间戳
+                                            realm.where(RMMyProfile.class).findFirst().getNewFansTime = time;
                                         }
                                     });
                                 }
@@ -341,13 +406,9 @@ public class PPApplication extends Application {
     }
 
     public static void getNewFriends() {
-        long startTime = 0;
+        long startTime;
         try (Realm realm = Realm.getDefaultInstance()) {
-            Number tmpNum = realm.where(RMRelatedUser.class).equalTo("isFriends", true).max("updateTime");
-            if (tmpNum != null) {
-                startTime = tmpNum.longValue();
-            }
-            Log.v("ppLog", "" + startTime);
+            startTime = realm.where(RMMyProfile.class).findFirst().getNewFriendsTime;
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFriends(startTime);
 
@@ -362,10 +423,18 @@ public class PPApplication extends Application {
                                         @Override
                                         public void execute(Realm realm) {
                                             JsonArray users = ppFromString(s, null).getAsJsonArray();
+
+                                            long time = 0;
+
                                             for (JsonElement item : users) {
-                                                Log.v("ppLog", item.toString());
+                                                Log.v("ppLog Friends", item.toString());
 
                                                 String itemStr = item.toString();
+
+                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                                if (itemTime > time) {
+                                                    time = itemTime;
+                                                }
 
                                                 String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
                                                 boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
@@ -393,6 +462,9 @@ public class PPApplication extends Application {
                                                     realm.copyToRealmOrUpdate(obj);
                                                 }
                                             }
+
+                                            //更新时间戳
+                                            realm.where(RMMyProfile.class).findFirst().getNewFriendsTime = time;
                                         }
                                     });
                                 }
