@@ -15,11 +15,13 @@
         android:orientation="horizontal">
 
         <TextView
+            android:gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:text="@{data.nickname}" />
 
         <FrameLayout
+            android:layout_gravity="center_vertical"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 

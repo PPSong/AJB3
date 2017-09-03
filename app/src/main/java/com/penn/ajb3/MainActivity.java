@@ -1,5 +1,6 @@
 package com.penn.ajb3;
 
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -167,6 +168,11 @@ public class MainActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             PPApplication.showDB();
+            return true;
+        } else  if (id == R.id.action_test) {
+            Intent intent = new Intent(this, TestActivity.class);
+            startActivity(intent);
+
             return true;
         }
 

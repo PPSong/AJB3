@@ -81,12 +81,14 @@ public class FriendsFragment extends Fragment {
                         final String curUserId = userId;
 
                         //如果在此用户在objWaiting中, 则点击无效
+                        Log.v("ppLog", "check:" + curUserId);
                         if (objWaiting.contains(curUserId)) {
                             Log.v("ppLog", "稍等下, 不要重复点击");
                             return;
                         }
 
                         objWaiting.add(curUserId);
+                        Log.v("ppLog", "added:" + curUserId);
                         int index = -1;
                         for (int i = 0; i < data.size(); i++) {
                             RMRelatedUser rmRelatedUser = data.get(i);
@@ -108,7 +110,7 @@ public class FriendsFragment extends Fragment {
                                     @Override
                                     public void run() throws Exception {
                                         objWaiting.remove(curUserId);
-
+                                        Log.v("ppLog", "removed:" + curUserId);
                                         int index = -1;
                                         for (int i = 0; i < data.size(); i++) {
                                             RMRelatedUser rmRelatedUser = data.get(i);
@@ -140,8 +142,16 @@ public class FriendsFragment extends Fragment {
                                                 try {
                                                     if (throwable instanceof HttpException) {
                                                         HttpException exception = (HttpException) throwable;
-                                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
+                                                        String errorBodyString = exception.response().errorBody().string();
+                                                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
+                                                        if (code < 0) {
+                                                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
+                                                            Log.v("ppLog", "http exception:" + error);
+                                                            PPApplication.showError("http exception:" + error);
+                                                        } else {
+                                                            Log.v("ppLog", "http exception:" + errorBodyString);
+                                                            PPApplication.showError("http exception:" + errorBodyString);
+                                                        }
                                                     } else {
                                                         Log.v("ppLog", throwable.toString());
                                                         PPApplication.showError(throwable.toString());
