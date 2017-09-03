@@ -30,21 +30,22 @@
 
             <Button
                 android:id="@+id/un_follow_bt"
-                android:background="@android:color/white"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@android:color/white"
                 android:text="取消关注"
                 android:visibility="@{data.unFollowable}" />
 
-        </FrameLayout>
+            <android.support.v4.widget.ContentLoadingProgressBar
+                android:id="@+id/pb"
+                style="?android:attr/android:progressBarStyleSmall"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:elevation="7dp"
+                android:visibility="invisible" />
 
-        <android.support.v4.widget.ContentLoadingProgressBar
-            android:id="@+id/pb"
-            style="?android:attr/android:progressBarStyleSmall"
-            android:visibility="invisible"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_gravity="center" />
+        </FrameLayout>
 
     </LinearLayout>
 

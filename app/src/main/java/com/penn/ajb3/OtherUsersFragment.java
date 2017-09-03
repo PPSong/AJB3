@@ -27,10 +27,13 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.OrderedCollectionChangeSet;
@@ -55,6 +58,7 @@ import static com.penn.ajb3.PPApplication.ppFromString;
  * create an instance of this fragment.
  */
 public class OtherUsersFragment extends Fragment {
+    private Set<String> objWaiting = new HashSet<String>();
     private ArrayList<OtherUser> otherUsers;
 
     public class OtherUser {
@@ -127,19 +131,57 @@ public class OtherUsersFragment extends Fragment {
                 binding.followBt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        //保存点击时的userId
+                        final String curUserId = userId;
+
+                        //如果在此用户在objWaiting中, 则点击无效
+                        if (objWaiting.contains(curUserId)) {
+                            Log.v("ppLog", "稍等下, 不要重复点击");
+                            return;
+                        }
+
+                        objWaiting.add(curUserId);
+                        int index = -1;
+                        for (int i = 0; i < otherUsers.size(); i++) {
+                            OtherUser otherUser = otherUsers.get(i);
+                            if (otherUser._id.equals(curUserId)) {
+                                index = i;
+                                break;
+                            }
+                        }
+
+                        if (index > -1) {
+                            rvAdapter.notifyItemChanged(index);
+                        }
+
                         Observable<String> result = PPRetrofit.getInstance().getPPService().follow(userId);
 
                         result.subscribeOn(Schedulers.newThread())
                                 .observeOn(AndroidSchedulers.mainThread())
+                                .doFinally(new Action() {
+                                    @Override
+                                    public void run() throws Exception {
+                                        objWaiting.remove(curUserId);
+
+                                        int index = -1;
+                                        for (int i = 0; i < otherUsers.size(); i++) {
+                                            OtherUser otherUser = otherUsers.get(i);
+                                            if (otherUser._id.equals(curUserId)) {
+                                                index = i;
+                                                break;
+                                            }
+                                        }
+
+                                        if (index > -1) {
+                                            rvAdapter.notifyItemChanged(index);
+                                        }
+                                    }
+                                })
                                 .subscribe(
                                         new Consumer<String>() {
                                             @Override
                                             public void accept(@NonNull final String s) throws Exception {
-                                                if (s.equals("ok")) {
-
-                                                } else {
-                                                    Log.v("ppLog", "follow failed:" + s);
-                                                }
+                                                //do nothing
                                             }
                                         },
                                         new Consumer<Throwable>() {
@@ -149,11 +191,14 @@ public class OtherUsersFragment extends Fragment {
                                                     if (throwable instanceof HttpException) {
                                                         HttpException exception = (HttpException) throwable;
                                                         Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
+                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
                                                     } else {
                                                         Log.v("ppLog", throwable.toString());
+                                                        PPApplication.showError(throwable.toString());
                                                     }
                                                 } catch (Exception e) {
                                                     Log.v("ppLog", e.toString());
+                                                    PPApplication.showError(e.toString());
                                                 }
                                             }
                                         });
@@ -164,6 +209,13 @@ public class OtherUsersFragment extends Fragment {
             public void bind(OtherUser otherUser) {
                 binding.setData(otherUser);
                 userId = otherUser._id;
+                if (objWaiting.contains(userId)) {
+                    Log.v("ppLog", "waiting");
+                    binding.pb.setVisibility(View.VISIBLE);
+                } else {
+                    Log.v("ppLog", "unwaiting");
+                    binding.pb.setVisibility(View.INVISIBLE);
+                }
             }
         }
     }

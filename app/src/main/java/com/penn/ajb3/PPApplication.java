@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -542,6 +543,10 @@ public class PPApplication extends Application {
         } else {
             Log.v("ppLog", "getPush none");
         }
+    }
+
+    public static void showError(String error) {
+        Toast.makeText(appContext, error, Toast.LENGTH_SHORT).show();
     }
 
     public static void showDB() {

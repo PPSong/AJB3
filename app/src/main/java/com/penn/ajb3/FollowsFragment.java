@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.gson.JsonArray;
 import com.penn.ajb3.databinding.FollowsUserCellBinding;
 import com.penn.ajb3.databinding.FragmentFollowsBinding;
 import com.penn.ajb3.realm.RMRelatedUser;
@@ -33,6 +34,8 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import retrofit2.HttpException;
+
+import static com.penn.ajb3.PPApplication.ppFromString;
 
 
 /**
@@ -74,6 +77,7 @@ public class FollowsFragment extends Fragment {
             public RelatedUserVH(FollowsUserCellBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
+
                 binding.unFollowBt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -127,11 +131,7 @@ public class FollowsFragment extends Fragment {
                                         new Consumer<String>() {
                                             @Override
                                             public void accept(@NonNull final String s) throws Exception {
-                                                if (s.equals("ok")) {
-
-                                                } else {
-                                                    Log.v("ppLog", "unFollow failed:" + s);
-                                                }
+                                                //do nothing
                                             }
                                         },
                                         new Consumer<Throwable>() {
@@ -141,11 +141,14 @@ public class FollowsFragment extends Fragment {
                                                     if (throwable instanceof HttpException) {
                                                         HttpException exception = (HttpException) throwable;
                                                         Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
+                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
                                                     } else {
                                                         Log.v("ppLog", throwable.toString());
+                                                        PPApplication.showError(throwable.toString());
                                                     }
                                                 } catch (Exception e) {
                                                     Log.v("ppLog", e.toString());
+                                                    PPApplication.showError(e.toString());
                                                 }
                                             }
                                         });

@@ -18,8 +18,12 @@ import com.penn.ajb3.databinding.FragmentFansBinding;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.OrderedCollectionChangeSet;
@@ -39,6 +43,8 @@ import retrofit2.HttpException;
  * create an instance of this fragment.
  */
 public class FansFragment extends Fragment {
+    private Set<String> objWaiting = new HashSet<String>();
+
     public class RelatedUserListAdapter extends RecyclerView.Adapter<RelatedUserListAdapter.RelatedUserVH> {
 
         @Override
@@ -71,19 +77,57 @@ public class FansFragment extends Fragment {
                 binding.followBt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Observable<String> result = PPRetrofit.getInstance().getPPService().follow(userId);
+                        //保存点击时的userId
+                        final String curUserId = userId;
+
+                        //如果在此用户在objWaiting中, 则点击无效
+                        if (objWaiting.contains(curUserId)) {
+                            Log.v("ppLog", "稍等下, 不要重复点击");
+                            return;
+                        }
+
+                        objWaiting.add(curUserId);
+                        int index = -1;
+                        for (int i = 0; i < data.size(); i++) {
+                            RMRelatedUser rmRelatedUser = data.get(i);
+                            if (rmRelatedUser.get_id().equals(curUserId)) {
+                                index = i;
+                                break;
+                            }
+                        }
+
+                        if (index > -1) {
+                            rvAdapter.notifyItemChanged(index);
+                        }
+
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().follow(curUserId);
 
                         result.subscribeOn(Schedulers.newThread())
                                 .observeOn(AndroidSchedulers.mainThread())
+                                .doFinally(new Action() {
+                                    @Override
+                                    public void run() throws Exception {
+                                        objWaiting.remove(curUserId);
+
+                                        int index = -1;
+                                        for (int i = 0; i < data.size(); i++) {
+                                            RMRelatedUser rmRelatedUser = data.get(i);
+                                            if (rmRelatedUser.get_id().equals(curUserId)) {
+                                                index = i;
+                                                break;
+                                            }
+                                        }
+
+                                        if (index > -1) {
+                                            rvAdapter.notifyItemChanged(index);
+                                        }
+                                    }
+                                })
                                 .subscribe(
                                         new Consumer<String>() {
                                             @Override
                                             public void accept(@NonNull final String s) throws Exception {
-                                                if (s.equals("ok")) {
-
-                                                } else {
-                                                    Log.v("ppLog", "follow failed:" + s);
-                                                }
+                                                //do nothing
                                             }
                                         },
                                         new Consumer<Throwable>() {
@@ -93,11 +137,14 @@ public class FansFragment extends Fragment {
                                                     if (throwable instanceof HttpException) {
                                                         HttpException exception = (HttpException) throwable;
                                                         Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
+                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
                                                     } else {
                                                         Log.v("ppLog", throwable.toString());
+                                                        PPApplication.showError(throwable.toString());
                                                     }
                                                 } catch (Exception e) {
                                                     Log.v("ppLog", e.toString());
+                                                    PPApplication.showError(e.toString());
                                                 }
                                             }
                                         });
@@ -106,10 +153,18 @@ public class FansFragment extends Fragment {
             }
 
             public void bind(RMRelatedUser rmRelatedUser) {
+                Log.v("ppLog", "bind");
                 //一定要加下面这句, 把记录从realm中copy出来成为unmanaged object, 以防止在setData过程中原来的记录被删除而导致程序崩溃
                 RMRelatedUser tmp = realm.copyFromRealm(rmRelatedUser);
                 binding.setData(tmp);
                 userId = tmp._id;
+                if (objWaiting.contains(userId)) {
+                    Log.v("ppLog", "waiting");
+                    binding.pb.setVisibility(View.VISIBLE);
+                } else {
+                    Log.v("ppLog", "unwaiting");
+                    binding.pb.setVisibility(View.INVISIBLE);
+                }
             }
         }
     }
