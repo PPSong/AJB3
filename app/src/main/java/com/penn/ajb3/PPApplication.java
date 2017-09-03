@@ -12,9 +12,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+
+import org.greenrobot.eventbus.EventBus;
+
+import java.util.ArrayList;
 
 import de.jonasrottmann.realmbrowser.RealmBrowser;
 import io.reactivex.Observable;
@@ -248,12 +253,12 @@ public class PPApplication extends Application {
                         new Consumer<String>() {
                             @Override
                             public void accept(@NonNull final String s) throws Exception {
+                                final JsonArray users = ppFromString(s, null).getAsJsonArray();
+
                                 try (Realm realm = Realm.getDefaultInstance()) {
                                     realm.executeTransaction(new Realm.Transaction() {
                                         @Override
                                         public void execute(Realm realm) {
-                                            JsonArray users = ppFromString(s, null).getAsJsonArray();
-
                                             long time = -1;
 
                                             for (JsonElement item : users) {
@@ -303,6 +308,18 @@ public class PPApplication extends Application {
                                         }
                                     });
                                 }
+
+                                ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                                for (JsonElement item : users) {
+
+                                    String itemStr = item.toString();
+
+                                    String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                    relatedUserIds.add(_id);
+                                }
+
+                                EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
                             }
                         },
                         new Consumer<Throwable>() {
@@ -335,12 +352,12 @@ public class PPApplication extends Application {
                         new Consumer<String>() {
                             @Override
                             public void accept(@NonNull final String s) throws Exception {
+                                final JsonArray users = ppFromString(s, null).getAsJsonArray();
+
                                 try (Realm realm = Realm.getDefaultInstance()) {
                                     realm.executeTransaction(new Realm.Transaction() {
                                         @Override
                                         public void execute(Realm realm) {
-                                            JsonArray users = ppFromString(s, null).getAsJsonArray();
-
                                             long time = -1;
 
                                             for (JsonElement item : users) {
@@ -387,6 +404,18 @@ public class PPApplication extends Application {
                                             }
                                         }
                                     });
+
+                                    ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                                    for (JsonElement item : users) {
+
+                                        String itemStr = item.toString();
+
+                                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                        relatedUserIds.add(_id);
+                                    }
+
+                                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
                                 }
                             }
                         },
@@ -421,11 +450,11 @@ public class PPApplication extends Application {
                             @Override
                             public void accept(@NonNull final String s) throws Exception {
                                 try (Realm realm = Realm.getDefaultInstance()) {
+                                    final JsonArray users = ppFromString(s, null).getAsJsonArray();
+
                                     realm.executeTransaction(new Realm.Transaction() {
                                         @Override
                                         public void execute(Realm realm) {
-                                            JsonArray users = ppFromString(s, null).getAsJsonArray();
-
                                             long time = -1;
 
                                             for (JsonElement item : users) {
@@ -471,6 +500,18 @@ public class PPApplication extends Application {
                                             }
                                         }
                                     });
+
+                                    ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                                    for (JsonElement item : users) {
+
+                                        String itemStr = item.toString();
+
+                                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                        relatedUserIds.add(_id);
+                                    }
+
+                                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
                                 }
                             }
                         },

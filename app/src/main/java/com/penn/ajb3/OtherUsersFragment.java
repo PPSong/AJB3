@@ -17,9 +17,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.penn.ajb3.databinding.OtherUsersUserCellBinding;
 import com.penn.ajb3.databinding.FragmentOtherUsersBinding;
+import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +72,25 @@ public class OtherUsersFragment extends Fragment {
                 } else {
                     return View.VISIBLE;
                 }
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void relatedUserChanged(RelatedUserChanged event) {
+        Log.v("ppLog", "relatedUserChanged");
+        int index = -1;
+
+        ArrayList<String> userIds = event.userIds;
+        for (String _id : userIds) {
+            for (int i = 0; i < otherUsers.size(); i++) {
+                if (otherUsers.get(i)._id.equals(_id)) {
+                    index = i;
+                }
+            }
+
+            if (index > -1) {
+                rvAdapter.notifyItemChanged(index);
             }
         }
     }
@@ -144,8 +168,6 @@ public class OtherUsersFragment extends Fragment {
         }
     }
 
-    private Realm realm;
-    private RealmResults<RMRelatedUser> data;
     private RelatedUserListAdapter rvAdapter;
     private FragmentOtherUsersBinding binding;
 
@@ -204,11 +226,14 @@ public class OtherUsersFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        realm.close();
+        EventBus.getDefault().register(this);
+
         super.onDestroyView();
     }
 
     private void setup() {
+        EventBus.getDefault().register(this);
+
         otherUsers = new ArrayList<OtherUser>();
 
         Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers();
@@ -250,16 +275,6 @@ public class OtherUsersFragment extends Fragment {
                                 }
                             }
                         });
-
-        realm = Realm.getDefaultInstance();
-        data = realm.where(RMRelatedUser.class).findAll();
-
-        data.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMRelatedUser>>() {
-            @Override
-            public void onChange(RealmResults<RMRelatedUser> rmRelatedUsers, OrderedCollectionChangeSet changeSet) {
-                rvAdapter.notifyDataSetChanged();
-            }
-        });
 
         rvAdapter = new RelatedUserListAdapter();
         binding.mainRv.setLayoutManager(new LinearLayoutManager(getContext()));
