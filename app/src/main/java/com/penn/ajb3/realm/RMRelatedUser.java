@@ -23,6 +23,78 @@ public class RMRelatedUser extends RealmObject {
     public boolean isFans;
     public boolean isFriends;
 
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public long getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(long updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public boolean isFollows() {
+        return isFollows;
+    }
+
+    public void setFollows(boolean follows) {
+        isFollows = follows;
+    }
+
+    public boolean isFans() {
+        return isFans;
+    }
+
+    public void setFans(boolean fans) {
+        isFans = fans;
+    }
+
+    public boolean isFriends() {
+        return isFriends;
+    }
+
+    public void setFriends(boolean friends) {
+        isFriends = friends;
+    }
+
     public boolean delete() {
         Log.v("ppLog", "delete1 1");
         if (!isFollows && !isFans && !isFriends) {
