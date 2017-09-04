@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("ppLog", "onCreate");
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -169,8 +170,13 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             PPApplication.showDB();
             return true;
-        } else  if (id == R.id.action_test) {
+        } else if (id == R.id.action_test) {
             Intent intent = new Intent(this, TestActivity.class);
+            startActivity(intent);
+
+            return true;
+        } else if (id == R.id.action_all_users) {
+            Intent intent = new Intent(this, AllUsersActivity.class);
             startActivity(intent);
 
             return true;

@@ -12,4 +12,9 @@
         android:orderInCategory="100"
         android:title="test"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_all_users"
+        android:orderInCategory="100"
+        android:title="all_users"
+        app:showAsAction="always" />
 </menu>
