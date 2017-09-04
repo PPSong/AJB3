@@ -310,6 +310,7 @@ public class OtherUsersFragment extends Fragment {
 
                                     otherUsers.add(obj);
                                 }
+                                rvAdapter.notifyDataSetChanged();
                             }
                         },
                         new Consumer<Throwable>() {
