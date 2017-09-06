@@ -272,8 +272,7 @@ public class AllUsersActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to the action bar's Up/Home button
             case android.R.id.home:
-                Log.v("ppLog", "back item");
-                this.finish();
+                NavUtils.navigateUpFromSameTask(this);
                 return true;
         }
         return super.onOptionsItemSelected(item);
