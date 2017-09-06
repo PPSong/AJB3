@@ -2,6 +2,7 @@ package com.penn.ajb3;
 
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -47,6 +48,9 @@ import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class MainActivity extends AppCompatActivity {
 
+    private int mInterval = 5000; // 5 seconds by default, can be changed later
+    private Handler mHandler;
+
     private Realm realm;
 
     private ActivityMainBinding binding;
@@ -73,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("ppLog", "onCreate");
+        mHandler = new Handler();
+        startRepeatingTask();
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -121,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
         });
 
-        //todo 为什么没有触发
         socket.on(EVENT_DISCONNECT, new Emitter.Listener() {
 
             @Override
@@ -149,7 +154,31 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         realm.close();
+        stopRepeatingTask();
         super.onDestroy();
+    }
+
+    Runnable mStatusChecker = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                socket.emit("heartBeat", PPApplication.getPrefStringValue("USERNAME", "NONE"));
+            } catch (Exception err) {
+                Log.v("ppLog", "mStatusChecker:" + err.toString());
+            }finally {
+                // 100% guarantee that this always happens, even if
+                // your update method throws an exception
+                mHandler.postDelayed(mStatusChecker, mInterval);
+            }
+        }
+    };
+
+    void startRepeatingTask() {
+        mStatusChecker.run();
+    }
+
+    void stopRepeatingTask() {
+        mHandler.removeCallbacks(mStatusChecker);
     }
 
     @Override

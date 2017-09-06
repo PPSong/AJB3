@@ -55,6 +55,7 @@ public class PPApplication extends Application {
     //preference keys
     public static final String AUTH_BODY = "AUTH_BODY";
     public static final String MY_ID = "MY_ID";
+    public static final String USERNAME = "USERNAME";
 
     //设置pref值
     public static void setPrefStringValue(String key, String value) {

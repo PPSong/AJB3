@@ -215,6 +215,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
                                     PPApplication.setPrefStringValue(PPApplication.MY_ID, PPApplication.ppFromString(s, "_id").getAsString());
                                     String username = PPApplication.ppFromString(s, "username").getAsString();
+                                    PPApplication.setPrefStringValue(PPApplication.USERNAME, PPApplication.ppFromString(s, "username").getAsString());
                                     PPApplication.initLocalData(username);
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
