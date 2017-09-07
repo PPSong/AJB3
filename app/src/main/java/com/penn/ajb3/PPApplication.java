@@ -570,6 +570,7 @@ public class PPApplication extends Application {
         removePrefItem(MY_ID);
         removePrefItem(AUTH_BODY);
         removePrefItem(USERNAME);
-        activity.finish();
+        Intent intent = new Intent(activity, LoginActivity.class);
+        activity.startActivity(intent);
     }
 }
