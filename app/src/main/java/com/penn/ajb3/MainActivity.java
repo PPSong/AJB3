@@ -49,8 +49,6 @@ import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class MainActivity extends AppCompatActivity {
 
-    private SocketService socketService;
-
     private Realm realm;
 
     private ActivityMainBinding binding;
@@ -77,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("ppLog", "onCreate");
-        socketService = SocketService.getInstance();
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -139,6 +136,10 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_all_users) {
             Intent intent = new Intent(this, AllUsersActivity.class);
             startActivity(intent);
+
+            return true;
+        } else if (id == R.id.action_logout) {
+            PPApplication.logout(this);
 
             return true;
         }

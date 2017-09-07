@@ -1,5 +1,6 @@
 package com.penn.ajb3;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +15,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
+import com.penn.ajb3.messageEvent.UserLogout;
+import com.penn.ajb3.messageEvent.UserSignIn;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -560,5 +563,13 @@ public class PPApplication extends Application {
         appContext = this;
 
         Realm.init(appContext);
+    }
+
+    public static void logout(Activity activity) {
+        EventBus.getDefault().post(new UserLogout());
+        removePrefItem(MY_ID);
+        removePrefItem(AUTH_BODY);
+        removePrefItem(USERNAME);
+        activity.finish();
     }
 }

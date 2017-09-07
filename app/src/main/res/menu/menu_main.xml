@@ -17,4 +17,9 @@
         android:orderInCategory="100"
         android:title="all_users"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_logout"
+        android:orderInCategory="100"
+        android:title="logout"
+        app:showAsAction="always" />
 </menu>

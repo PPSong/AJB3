@@ -31,7 +31,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.penn.ajb3.messageEvent.RelatedUserChanged;
+import com.penn.ajb3.messageEvent.UserSignIn;
 import com.penn.ajb3.util.PPRetrofit;
+import com.penn.ajb3.util.SocketService;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,6 +85,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        startService(new Intent(this, SocketService.class));
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -106,6 +113,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        if (!(PPApplication.getPrefStringValue(PPApplication.USERNAME, "NONE").equals("NONE"))) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
     }
 
     private void populateAutoComplete() {
@@ -216,6 +228,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     PPApplication.setPrefStringValue(PPApplication.MY_ID, PPApplication.ppFromString(s, "_id").getAsString());
                                     String username = PPApplication.ppFromString(s, "username").getAsString();
                                     PPApplication.setPrefStringValue(PPApplication.USERNAME, PPApplication.ppFromString(s, "username").getAsString());
+                                    EventBus.getDefault().post(new UserSignIn());
                                     PPApplication.initLocalData(username);
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);

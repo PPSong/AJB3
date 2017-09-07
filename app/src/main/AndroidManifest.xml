@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.penn.ajb3">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -32,9 +33,21 @@
         <activity android:name=".TestActivity" />
         <activity
             android:name=".AllUsersActivity"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"></activity>
 
-        </activity>
+        <service
+            android:name=".util.SocketService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name=".RebootCompleteReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
