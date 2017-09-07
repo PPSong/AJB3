@@ -27,6 +27,7 @@ import com.github.nkzawa.socketio.client.IO;
 import com.penn.ajb3.databinding.ActivityMainBinding;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+import com.penn.ajb3.util.SocketService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,8 +49,7 @@ import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class MainActivity extends AppCompatActivity {
 
-    private int mInterval = 5000; // 5 seconds by default, can be changed later
-    private Handler mHandler;
+    private SocketService socketService;
 
     private Realm realm;
 
@@ -77,8 +77,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("ppLog", "onCreate");
-        mHandler = new Handler();
-        startRepeatingTask();
+        socketService = SocketService.getInstance();
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
@@ -94,49 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
         binding.tabs.setupWithViewPager(mViewPager);
 
-        try {
-            socket = IO.socket(PPRetrofit.SOCKET_URL);
-        } catch (URISyntaxException e) {
-            Log.v("ppLog", "socket exception:" + e.toString());
-        }
-
-        socket.on("pushEvent", new Emitter.Listener() {
-
-            @Override
-            public void call(Object... args) {
-                String typeString = args[0].toString();
-                PPApplication.getPush(ppFromString(typeString, "type").getAsString());
-            }
-        });
-
-        socket.on("needYourUserId", new Emitter.Listener() {
-
-            @Override
-            public void call(Object... args) {
-                socket.emit("giveMyUserId", PPApplication.getPrefStringValue("MY_ID", "NONE"));
-            }
-        });
-
-        socket.on(EVENT_CONNECT, new Emitter.Listener() {
-
-            @Override
-            public void call(Object... args) {
-                Log.v("ppLog", "EVENT_CONNECT");
-                PPApplication.reconnectToServer();
-            }
-
-        });
-
-        socket.on(EVENT_DISCONNECT, new Emitter.Listener() {
-
-            @Override
-            public void call(Object... args) {
-                Log.v("ppLog", "EVENT_DISCONNECT");
-            }
-
-        });
-
-        socket.connect();
 
         realm = Realm.getDefaultInstance();
         relatedUsers = realm.where(RMRelatedUser.class).findAll();
@@ -154,31 +110,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         realm.close();
-        stopRepeatingTask();
         super.onDestroy();
-    }
-
-    Runnable mStatusChecker = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                socket.emit("heartBeat", PPApplication.getPrefStringValue("USERNAME", "NONE"));
-            } catch (Exception err) {
-                Log.v("ppLog", "mStatusChecker:" + err.toString());
-            }finally {
-                // 100% guarantee that this always happens, even if
-                // your update method throws an exception
-                mHandler.postDelayed(mStatusChecker, mInterval);
-            }
-        }
-    };
-
-    void startRepeatingTask() {
-        mStatusChecker.run();
-    }
-
-    void stopRepeatingTask() {
-        mHandler.removeCallbacks(mStatusChecker);
     }
 
     @Override
