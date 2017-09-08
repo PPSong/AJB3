@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         } else if (id == R.id.action_logout) {
-            PPApplication.logout(this);
+            PPApplication.logout();
 
             return true;
         }
