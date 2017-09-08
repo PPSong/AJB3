@@ -565,13 +565,13 @@ public class PPApplication extends Application {
         Realm.init(appContext);
     }
 
-    public static void logout(Activity activity) {
+    public static void logout() {
         EventBus.getDefault().post(new UserLogout());
         removePrefItem(MY_ID);
         removePrefItem(AUTH_BODY);
         removePrefItem(USERNAME);
-        Intent intent = new Intent(activity, LoginActivity.class);
-        activity.startActivity(intent);
+        Intent intent = new Intent(appContext, LoginActivity.class);
+        appContext.startActivity(intent);
     }
 
     public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
@@ -580,4 +580,47 @@ public class PPApplication extends Application {
                 .doFinally(finalAction)
                 .subscribe(callSuccess, callFailure);
     }
+
+    public static Consumer<Object> callSuccess = new Consumer<Object>() {
+        @Override
+        public void accept(@NonNull final Object s) {
+            //do nothing
+        }
+    };
+
+    public static Consumer<Throwable> callFailure = new Consumer<Throwable>() {
+        @Override
+        public void accept(@NonNull Throwable throwable) {
+            try {
+                if (throwable instanceof HttpException) {
+                    //http非200返回code错误
+                    HttpException exception = (HttpException) throwable;
+                    String errorBodyString = exception.response().errorBody().string();
+                    Log.v("ppLog", errorBodyString);
+                    int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
+                    if (code < 0) {
+                        //用户自定义错误
+                        String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
+                        Log.v("ppLog", "http exception:" + error);
+                        PPApplication.showError("http exception:" + error);
+                        if (code == -1000) {
+                            PPApplication.logout();
+                        }
+                    } else {
+                        //http常规错误
+                        Log.v("ppLog", "http exception:" + errorBodyString);
+                        PPApplication.showError("http exception:" + errorBodyString);
+                    }
+                } else {
+                    //执行callSuccess过程中错误
+                    Log.v("ppLog", throwable.toString());
+                    PPApplication.showError(throwable.toString());
+                }
+            } catch (Exception e) {
+                //执行callFailure过程中错误
+                Log.v("ppLog", e.toString());
+                PPApplication.showError(e.toString());
+            }
+        }
+    };
 }

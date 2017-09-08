@@ -208,6 +208,7 @@ public class AllUsersActivity extends AppCompatActivity {
 
     private AllUsersActivity.RelatedUserListAdapter rvAdapter;
     private ActivityAllUsersBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -223,44 +224,31 @@ public class AllUsersActivity extends AppCompatActivity {
 
         Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers();
 
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                JsonArray users = ppFromString(s, null).getAsJsonArray();
+                for (JsonElement item : users) {
+
+                    String itemStr = item.toString();
+
+                    OtherUser obj = new OtherUser();
+                    obj._id = ppFromString(itemStr, "_id").getAsString();
+                    obj.username = ppFromString(itemStr, "username").getAsString();
+                    obj.nickname = ppFromString(itemStr, "nickname").getAsString();
+                    obj.sex = ppFromString(itemStr, "sex").getAsString();
+                    obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+
+                    otherUsers.add(obj);
+                }
+                rvAdapter.notifyDataSetChanged();
+            }
+        };
+
         result.subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull final String s) throws Exception {
-                                JsonArray users = ppFromString(s, null).getAsJsonArray();
-                                for (JsonElement item : users) {
-
-                                    String itemStr = item.toString();
-
-                                    OtherUser obj = new OtherUser();
-                                    obj._id = ppFromString(itemStr, "_id").getAsString();
-                                    obj.username = ppFromString(itemStr, "username").getAsString();
-                                    obj.nickname = ppFromString(itemStr, "nickname").getAsString();
-                                    obj.sex = ppFromString(itemStr, "sex").getAsString();
-                                    obj.avatar = ppFromString(itemStr, "avatar").getAsString();
-
-                                    otherUsers.add(obj);
-                                }
-                                rvAdapter.notifyDataSetChanged();
-                            }
-                        },
-                        new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
-                                    }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
-                                }
-                            }
-                        });
+                .subscribe(callSuccess, PPApplication.callFailure);
 
         rvAdapter = new RelatedUserListAdapter();
         binding.mainRv.setLayoutManager(new LinearLayoutManager(this));

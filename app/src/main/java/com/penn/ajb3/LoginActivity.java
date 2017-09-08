@@ -52,6 +52,8 @@ import retrofit2.Response;
 
 import static android.Manifest.permission.EXPAND_STATUS_BAR;
 import static android.Manifest.permission.READ_CONTACTS;
+import static com.penn.ajb3.PPApplication.callFailure;
+import static com.penn.ajb3.PPApplication.callSuccess;
 import static com.penn.ajb3.PPApplication.initLocalData;
 
 /**
@@ -208,47 +210,38 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // perform the user login attempt.
             showProgress(true);
 
-            Observable<String> london = PPRetrofit.getInstance().getPPService().login(email, password);
+            Observable<String> result = PPRetrofit.getInstance().getPPService().login(email, password);
 
-            london.subscribeOn(Schedulers.newThread())
+            Consumer<Object> callSuccess = new Consumer<Object>() {
+                @Override
+                public void accept(@NonNull final Object sObj) {
+                    String s = sObj.toString();
+                    Log.v("ppLog", s);
+                    Log.v("ppLog", PPApplication.ppFromString(s, "token").getAsString());
+                    PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
+                    PPApplication.setPrefStringValue(PPApplication.MY_ID, PPApplication.ppFromString(s, "_id").getAsString());
+                    String username = PPApplication.ppFromString(s, "username").getAsString();
+                    PPApplication.setPrefStringValue(PPApplication.USERNAME, PPApplication.ppFromString(s, "username").getAsString());
+                    EventBus.getDefault().post(new UserSignIn());
+                    PPApplication.initLocalData(username);
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                }
+            };
+
+            Action callFinal = new Action() {
+                @Override
+                public void run() throws Exception {
+                    showProgress(false);
+                }
+            };
+
+            PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, callFinal);
+
+            result.subscribeOn(Schedulers.newThread())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally(new Action() {
-                        @Override
-                        public void run() throws Exception {
-                            showProgress(false);
-                        }
-                    })
-                    .subscribe(
-                            new Consumer<String>() {
-                                @Override
-                                public void accept(@NonNull String s) throws Exception {
-                                    Log.v("ppLog", s);
-                                    Log.v("ppLog", PPApplication.ppFromString(s, "token").getAsString());
-                                    PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
-                                    PPApplication.setPrefStringValue(PPApplication.MY_ID, PPApplication.ppFromString(s, "_id").getAsString());
-                                    String username = PPApplication.ppFromString(s, "username").getAsString();
-                                    PPApplication.setPrefStringValue(PPApplication.USERNAME, PPApplication.ppFromString(s, "username").getAsString());
-                                    EventBus.getDefault().post(new UserSignIn());
-                                    PPApplication.initLocalData(username);
-                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                    startActivity(intent);
-                                }
-                            },
-                            new Consumer<Throwable>() {
-                                @Override
-                                public void accept(@NonNull Throwable throwable) {
-                                    try {
-                                        if (throwable instanceof HttpException) {
-                                            HttpException exception = (HttpException) throwable;
-                                            Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                        } else {
-                                            Log.v("ppLog", throwable.toString());
-                                        }
-                                    } catch (Exception e) {
-                                        Log.v("ppLog", e.toString());
-                                    }
-                                }
-                            });
+                    .doFinally(callFinal)
+                    .subscribe(callSuccess, callFailure);
         }
     }
 

@@ -103,47 +103,6 @@ public class FriendsFragment extends Fragment {
                         }
 
                         Observable<String> result = PPRetrofit.getInstance().getPPService().unFriend(userId);
-                        Consumer<Object> callSuccess = new Consumer<Object>() {
-                            @Override
-                            public void accept(@NonNull final Object s) throws Exception {
-                                if (s.toString().equals("ok")) {
-
-                                } else {
-                                    Log.v("ppLog", "unFriend failed:" + s);
-                                }
-                            }
-                        };
-
-                        Consumer<Throwable> callFailure = new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        String errorBodyString = exception.response().errorBody().string();
-                                        Log.v("ppLog", errorBodyString);
-                                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
-                                        if (code < 0) {
-                                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
-                                            Log.v("ppLog", "http exception:" + error);
-                                            PPApplication.showError("http exception:" + error);
-                                            if (code == -1000) {
-                                                PPApplication.logout(getActivity());
-                                            }
-                                        } else {
-                                            Log.v("ppLog", "http exception:" + errorBodyString);
-                                            PPApplication.showError("http exception:" + errorBodyString);
-                                        }
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
-                                        PPApplication.showError(throwable.toString());
-                                    }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
-                                    PPApplication.showError(e.toString());
-                                }
-                            }
-                        };
 
                         Action callFinal = new Action() {
                             @Override
@@ -165,7 +124,7 @@ public class FriendsFragment extends Fragment {
                             }
                         };
 
-                        PPApplication.apiRequest(result, callSuccess, callFailure, callFinal);
+                        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
 
 //                        result.subscribeOn(Schedulers.newThread())
 //                                .observeOn(AndroidSchedulers.mainThread())
