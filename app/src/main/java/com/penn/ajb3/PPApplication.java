@@ -266,8 +266,9 @@ public class PPApplication extends Application {
                                 if (delete) {
                                     if (obj != null) {
                                         obj.isFollows = false;
+                                        obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                         Log.v("ppLog", "getNewFollows delete start");
-                                        obj.delete2();
+                                        obj.delete();
                                         Log.v("ppLog", "getNewFollows delete end");
                                     }
                                 } else {
@@ -279,7 +280,7 @@ public class PPApplication extends Application {
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                     obj.isFollows = true;
 
                                     // This will update an existing object with the same primary key
@@ -348,6 +349,7 @@ public class PPApplication extends Application {
                                 if (delete) {
                                     if (obj != null) {
                                         obj.isFans = false;
+                                        obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                         obj.delete();
                                     }
                                 } else {
@@ -359,7 +361,7 @@ public class PPApplication extends Application {
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                     obj.isFans = true;
 
                                     // This will update an existing object with the same primary key
@@ -429,6 +431,7 @@ public class PPApplication extends Application {
                                 if (delete) {
                                     if (obj != null) {
                                         obj.isFriends = false;
+                                        obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                         obj.delete();
                                     }
                                 } else {
@@ -440,7 +443,7 @@ public class PPApplication extends Application {
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
                                     obj.isFriends = true;
 
                                     // This will update an existing object with the same primary key

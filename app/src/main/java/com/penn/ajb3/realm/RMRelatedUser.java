@@ -106,17 +106,6 @@ public class RMRelatedUser extends RealmObject {
         }
     }
 
-    public boolean delete2() {
-        Log.v("ppLog", "delete2 1");
-        if (!isFollows && !isFans && !isFriends) {
-            Log.v("ppLog", "delete2 2");
-            deleteFromRealm();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public String followState() {
         Log.v("ppLog", "followState");
 
