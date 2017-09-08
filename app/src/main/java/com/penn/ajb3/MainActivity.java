@@ -202,8 +202,6 @@ public class MainActivity extends AppCompatActivity {
                 return FansFragment.newInstance(null, null);
             } else if (position == 2) {
                 return FriendsFragment.newInstance(null, null);
-            } else if (position == 3) {
-                return OtherUsersFragment.newInstance(null, null);
             } else {
                 return PlaceholderFragment.newInstance(position + 1);
             }
@@ -212,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 4;
+            return 3;
         }
 
         @Override
@@ -224,8 +222,6 @@ public class MainActivity extends AppCompatActivity {
                     return "FANS";
                 case 2:
                     return "FRIENDS";
-                case 3:
-                    return "ALL_USERS";
             }
             return null;
         }

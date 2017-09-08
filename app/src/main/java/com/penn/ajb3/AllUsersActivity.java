@@ -18,8 +18,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.penn.ajb3.databinding.ActivityAllUsersBinding;
 import com.penn.ajb3.databinding.AllUsersUserCellBinding;
-import com.penn.ajb3.databinding.FragmentOtherUsersBinding;
-import com.penn.ajb3.databinding.OtherUsersUserCellBinding;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -142,52 +140,27 @@ public class AllUsersActivity extends AppCompatActivity {
 
                         Observable<String> result = PPRetrofit.getInstance().getPPService().follow(userId);
 
-                        result.subscribeOn(Schedulers.newThread())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doFinally(new Action() {
-                                    @Override
-                                    public void run() throws Exception {
-                                        objWaiting.remove(curUserId);
+                        Action callFinal = new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                objWaiting.remove(curUserId);
 
-                                        int index = -1;
-                                        for (int i = 0; i < otherUsers.size(); i++) {
-                                            AllUsersActivity.OtherUser otherUser = otherUsers.get(i);
-                                            if (otherUser._id.equals(curUserId)) {
-                                                index = i;
-                                                break;
-                                            }
-                                        }
-
-                                        if (index > -1) {
-                                            rvAdapter.notifyItemChanged(index);
-                                        }
+                                int index = -1;
+                                for (int i = 0; i < otherUsers.size(); i++) {
+                                    AllUsersActivity.OtherUser otherUser = otherUsers.get(i);
+                                    if (otherUser._id.equals(curUserId)) {
+                                        index = i;
+                                        break;
                                     }
-                                })
-                                .subscribe(
-                                        new Consumer<String>() {
-                                            @Override
-                                            public void accept(@NonNull final String s) throws Exception {
-                                                //do nothing
-                                            }
-                                        },
-                                        new Consumer<Throwable>() {
-                                            @Override
-                                            public void accept(@NonNull Throwable throwable) {
-                                                try {
-                                                    if (throwable instanceof HttpException) {
-                                                        HttpException exception = (HttpException) throwable;
-                                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
-                                                    } else {
-                                                        Log.v("ppLog", throwable.toString());
-                                                        PPApplication.showError(throwable.toString());
-                                                    }
-                                                } catch (Exception e) {
-                                                    Log.v("ppLog", e.toString());
-                                                    PPApplication.showError(e.toString());
-                                                }
-                                            }
-                                        });
+                                }
+
+                                if (index > -1) {
+                                    rvAdapter.notifyItemChanged(index);
+                                }
+                            }
+                        };
+
+                        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
                     }
                 });
             }

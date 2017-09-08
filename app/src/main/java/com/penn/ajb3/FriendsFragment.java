@@ -125,69 +125,6 @@ public class FriendsFragment extends Fragment {
                         };
 
                         PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
-
-//                        result.subscribeOn(Schedulers.newThread())
-//                                .observeOn(AndroidSchedulers.mainThread())
-//                                .doFinally(new Action() {
-//                                    @Override
-//                                    public void run() throws Exception {
-//                                        objWaiting.remove(curUserId);
-//                                        Log.v("ppLog", "removed:" + curUserId);
-//                                        int index = -1;
-//                                        for (int i = 0; i < data.size(); i++) {
-//                                            RMRelatedUser rmRelatedUser = data.get(i);
-//                                            if (rmRelatedUser.get_id().equals(curUserId)) {
-//                                                index = i;
-//                                                break;
-//                                            }
-//                                        }
-//
-//                                        if (index > -1) {
-//                                            rvAdapter.notifyItemChanged(index);
-//                                        }
-//                                    }
-//                                })
-//                                .subscribe(
-//                                        new Consumer<String>() {
-//                                            @Override
-//                                            public void accept(@NonNull final String s) throws Exception {
-//                                                if (s.equals("ok")) {
-//
-//                                                } else {
-//                                                    Log.v("ppLog", "unFriend failed:" + s);
-//                                                }
-//                                            }
-//                                        },
-//                                        new Consumer<Throwable>() {
-//                                            @Override
-//                                            public void accept(@NonNull Throwable throwable) {
-//                                                try {
-//                                                    if (throwable instanceof HttpException) {
-//                                                        HttpException exception = (HttpException) throwable;
-//                                                        String errorBodyString = exception.response().errorBody().string();
-//                                                        Log.v("ppLog", errorBodyString);
-//                                                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
-//                                                        if (code < 0) {
-//                                                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
-//                                                            Log.v("ppLog", "http exception:" + error);
-//                                                            PPApplication.showError("http exception:" + error);
-//                                                            if (code == -1000) {
-//                                                                PPApplication.logout(getActivity());
-//                                                            }
-//                                                        } else {
-//                                                            Log.v("ppLog", "http exception:" + errorBodyString);
-//                                                            PPApplication.showError("http exception:" + errorBodyString);
-//                                                        }
-//                                                    } else {
-//                                                        Log.v("ppLog", throwable.toString());
-//                                                        PPApplication.showError(throwable.toString());
-//                                                    }
-//                                                } catch (Exception e) {
-//                                                    Log.v("ppLog", e.toString());
-//                                                    PPApplication.showError(e.toString());
-//                                                }
-//                                            }
-//                                        });
                     }
                 });
             }

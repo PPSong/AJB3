@@ -237,11 +237,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             };
 
             PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, callFinal);
-
-            result.subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .doFinally(callFinal)
-                    .subscribe(callSuccess, callFailure);
         }
     }
 

@@ -193,56 +193,41 @@ public class PPApplication extends Application {
     public static void reconnectToServer() {
         Observable<String> result = PPRetrofit.getInstance().getPPService().getMyProfile();
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull final String s) throws Exception {
-                                try (Realm realm = Realm.getDefaultInstance()) {
-                                    realm.executeTransaction(new Realm.Transaction() {
-                                        @Override
-                                        public void execute(Realm realm) {
-                                            String itemStr = ppFromString(s, null).toString();
-                                            RMMyProfile obj = realm.where(RMMyProfile.class).findFirst();
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                final String s = sObj.toString();
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            String itemStr = ppFromString(s, null).toString();
+                            RMMyProfile obj = realm.where(RMMyProfile.class).findFirst();
 
-                                            if (obj == null) {
-                                                obj = new RMMyProfile();
-                                                obj._id = ppFromString(itemStr, "_id").getAsString();
-                                            }
-                                            obj.username = ppFromString(itemStr, "username").getAsString();
-                                            obj.nickname = ppFromString(itemStr, "nickname").getAsString();
-                                            obj.sex = ppFromString(itemStr, "sex").getAsString();
-                                            obj.avatar = ppFromString(itemStr, "avatar").getAsString();
-                                            obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
-
-                                            // This will update an existing object with the same primary key
-                                            // or create a new object if an object with no primary key = _id
-                                            realm.copyToRealmOrUpdate(obj);
-                                        }
-                                    });
-                                }
-
-                                getNewFollows();
-                                getNewFans();
-                                getNewFriends();
+                            if (obj == null) {
+                                obj = new RMMyProfile();
+                                obj._id = ppFromString(itemStr, "_id").getAsString();
                             }
-                        },
-                        new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
-                                    }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
-                                }
-                            }
-                        });
+                            obj.username = ppFromString(itemStr, "username").getAsString();
+                            obj.nickname = ppFromString(itemStr, "nickname").getAsString();
+                            obj.sex = ppFromString(itemStr, "sex").getAsString();
+                            obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+                            obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
+
+                            // This will update an existing object with the same primary key
+                            // or create a new object if an object with no primary key = _id
+                            realm.copyToRealmOrUpdate(obj);
+                        }
+                    });
+                }
+
+                getNewFollows();
+                getNewFans();
+                getNewFriends();
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
     }
 
     public static void getNewFollows() {
@@ -252,96 +237,80 @@ public class PPApplication extends Application {
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFollows(startTime);
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull final String s) throws Exception {
-                                final JsonArray users = ppFromString(s, null).getAsJsonArray();
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                final JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                try (Realm realm = Realm.getDefaultInstance()) {
-                                    realm.executeTransaction(new Realm.Transaction() {
-                                        @Override
-                                        public void execute(Realm realm) {
-                                            long time = -1;
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            long time = -1;
 
-                                            for (JsonElement item : users) {
-//                                                Log.v("ppLog Follows", item.toString());
+                            for (JsonElement item : users) {
 
-                                                String itemStr = item.toString();
+                                String itemStr = item.toString();
 
-                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
-                                                if (itemTime > time) {
-                                                    time = itemTime;
-                                                }
-
-                                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
-
-                                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
-
-                                                if (delete) {
-                                                    if (obj != null) {
-                                                        obj.isFollows = false;
-                                                        Log.v("ppLog", "getNewFollows delete start");
-                                                        obj.delete2();
-                                                        Log.v("ppLog", "getNewFollows delete end");
-                                                    }
-                                                } else {
-                                                    if (obj == null) {
-                                                        obj = new RMRelatedUser();
-                                                        obj._id = _id;
-                                                    }
-                                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
-                                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
-                                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
-                                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
-                                                    obj.isFollows = true;
-
-                                                    // This will update an existing object with the same primary key
-                                                    // or create a new object if an object with no primary key = _id
-                                                    realm.copyToRealmOrUpdate(obj);
-                                                }
-                                            }
-
-                                            //更新时间戳
-                                            if (time > -1) {
-                                                realm.where(RMMyProfile.class).findFirst().getNewFollowsTime = time;
-                                            }
-                                        }
-                                    });
+                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                if (itemTime > time) {
+                                    time = itemTime;
                                 }
 
-                                ArrayList<String> relatedUserIds = new ArrayList<String>();
+                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
 
-                                for (JsonElement item : users) {
+                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
 
-                                    String itemStr = item.toString();
-
-                                    String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                    relatedUserIds.add(_id);
-                                }
-
-                                EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
-                            }
-                        },
-                        new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
+                                if (delete) {
+                                    if (obj != null) {
+                                        obj.isFollows = false;
+                                        Log.v("ppLog", "getNewFollows delete start");
+                                        obj.delete2();
+                                        Log.v("ppLog", "getNewFollows delete end");
                                     }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
+                                } else {
+                                    if (obj == null) {
+                                        obj = new RMRelatedUser();
+                                        obj._id = _id;
+                                    }
+                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
+                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
+                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
+                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
+                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.isFollows = true;
+
+                                    // This will update an existing object with the same primary key
+                                    // or create a new object if an object with no primary key = _id
+                                    realm.copyToRealmOrUpdate(obj);
                                 }
                             }
-                        });
+
+                            //更新时间戳
+                            if (time > -1) {
+                                realm.where(RMMyProfile.class).findFirst().getNewFollowsTime = time;
+                            }
+                        }
+                    });
+                }
+
+                ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                for (JsonElement item : users) {
+
+                    String itemStr = item.toString();
+
+                    String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                    relatedUserIds.add(_id);
+                }
+
+                EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+            }
+        };
+
+        apiRequest(result, callSuccess, PPApplication.callFailure, null);
     }
 
     public static void getNewFans() {
@@ -351,94 +320,77 @@ public class PPApplication extends Application {
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFans(startTime);
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull final String s) throws Exception {
-                                final JsonArray users = ppFromString(s, null).getAsJsonArray();
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                final JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                try (Realm realm = Realm.getDefaultInstance()) {
-                                    realm.executeTransaction(new Realm.Transaction() {
-                                        @Override
-                                        public void execute(Realm realm) {
-                                            long time = -1;
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            long time = -1;
 
-                                            for (JsonElement item : users) {
-//                                                Log.v("ppLog Fans", item.toString());
+                            for (JsonElement item : users) {
+                                String itemStr = item.toString();
 
-                                                String itemStr = item.toString();
+                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                if (itemTime > time) {
+                                    time = itemTime;
+                                }
 
-                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
-                                                if (itemTime > time) {
-                                                    time = itemTime;
-                                                }
+                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
 
-                                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
+                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
 
-                                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
-
-                                                if (delete) {
-                                                    if (obj != null) {
-                                                        obj.isFans = false;
-                                                        obj.delete();
-                                                    }
-                                                } else {
-                                                    if (obj == null) {
-                                                        obj = new RMRelatedUser();
-                                                        obj._id = _id;
-                                                    }
-                                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
-                                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
-                                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
-                                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
-                                                    obj.isFans = true;
-
-                                                    // This will update an existing object with the same primary key
-                                                    // or create a new object if an object with no primary key = _id
-                                                    realm.copyToRealmOrUpdate(obj);
-                                                }
-                                            }
-
-                                            //更新时间戳
-                                            if (time > -1) {
-                                                realm.where(RMMyProfile.class).findFirst().getNewFansTime = time;
-                                            }
-                                        }
-                                    });
-
-                                    ArrayList<String> relatedUserIds = new ArrayList<String>();
-
-                                    for (JsonElement item : users) {
-
-                                        String itemStr = item.toString();
-
-                                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                        relatedUserIds.add(_id);
+                                if (delete) {
+                                    if (obj != null) {
+                                        obj.isFans = false;
+                                        obj.delete();
                                     }
+                                } else {
+                                    if (obj == null) {
+                                        obj = new RMRelatedUser();
+                                        obj._id = _id;
+                                    }
+                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
+                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
+                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
+                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
+                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.isFans = true;
 
-                                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                                    // This will update an existing object with the same primary key
+                                    // or create a new object if an object with no primary key = _id
+                                    realm.copyToRealmOrUpdate(obj);
                                 }
                             }
-                        },
-                        new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
-                                    }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
-                                }
+
+                            //更新时间戳
+                            if (time > -1) {
+                                realm.where(RMMyProfile.class).findFirst().getNewFansTime = time;
                             }
-                        });
+                        }
+                    });
+
+                    ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                    for (JsonElement item : users) {
+
+                        String itemStr = item.toString();
+
+                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                        relatedUserIds.add(_id);
+                    }
+
+                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                }
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
     }
 
     public static void getNewFriends() {
@@ -448,93 +400,78 @@ public class PPApplication extends Application {
         }
         Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFriends(startTime);
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        new Consumer<String>() {
-                            @Override
-                            public void accept(@NonNull final String s) throws Exception {
-                                try (Realm realm = Realm.getDefaultInstance()) {
-                                    final JsonArray users = ppFromString(s, null).getAsJsonArray();
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    final JsonArray users = ppFromString(s, null).getAsJsonArray();
 
-                                    realm.executeTransaction(new Realm.Transaction() {
-                                        @Override
-                                        public void execute(Realm realm) {
-                                            long time = -1;
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            long time = -1;
 
-                                            for (JsonElement item : users) {
-                                                Log.v("ppLog Friends", item.toString());
+                            for (JsonElement item : users) {
+                                Log.v("ppLog Friends", item.toString());
 
-                                                String itemStr = item.toString();
+                                String itemStr = item.toString();
 
-                                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
-                                                if (itemTime > time) {
-                                                    time = itemTime;
-                                                }
+                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                if (itemTime > time) {
+                                    time = itemTime;
+                                }
 
-                                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
-                                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
+                                String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
+                                RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", _id).findFirst();
 
-                                                if (delete) {
-                                                    if (obj != null) {
-                                                        obj.isFriends = false;
-                                                        obj.delete();
-                                                    }
-                                                } else {
-                                                    if (obj == null) {
-                                                        obj = new RMRelatedUser();
-                                                        obj._id = _id;
-                                                    }
-                                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
-                                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
-                                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
-                                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
-                                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
-                                                    obj.isFriends = true;
-
-                                                    // This will update an existing object with the same primary key
-                                                    // or create a new object if an object with no primary key = _id
-                                                    realm.copyToRealmOrUpdate(obj);
-                                                }
-                                            }
-
-                                            //更新时间戳
-                                            if (time > -1) {
-                                                realm.where(RMMyProfile.class).findFirst().getNewFriendsTime = time;
-                                            }
-                                        }
-                                    });
-
-                                    ArrayList<String> relatedUserIds = new ArrayList<String>();
-
-                                    for (JsonElement item : users) {
-
-                                        String itemStr = item.toString();
-
-                                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
-                                        relatedUserIds.add(_id);
+                                if (delete) {
+                                    if (obj != null) {
+                                        obj.isFriends = false;
+                                        obj.delete();
                                     }
+                                } else {
+                                    if (obj == null) {
+                                        obj = new RMRelatedUser();
+                                        obj._id = _id;
+                                    }
+                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
+                                    obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
+                                    obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
+                                    obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
+                                    obj.updateTime = ppFromString(itemStr, "targetUserId.updateTime").getAsLong();
+                                    obj.isFriends = true;
 
-                                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                                    // This will update an existing object with the same primary key
+                                    // or create a new object if an object with no primary key = _id
+                                    realm.copyToRealmOrUpdate(obj);
                                 }
                             }
-                        },
-                        new Consumer<Throwable>() {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) {
-                                try {
-                                    if (throwable instanceof HttpException) {
-                                        HttpException exception = (HttpException) throwable;
-                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                    } else {
-                                        Log.v("ppLog", throwable.toString());
-                                    }
-                                } catch (Exception e) {
-                                    Log.v("ppLog", e.toString());
-                                }
+
+                            //更新时间戳
+                            if (time > -1) {
+                                realm.where(RMMyProfile.class).findFirst().getNewFriendsTime = time;
                             }
-                        });
+                        }
+                    });
+
+                    ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                    for (JsonElement item : users) {
+
+                        String itemStr = item.toString();
+
+                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                        relatedUserIds.add(_id);
+                    }
+
+                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                }
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
     }
 
     public static void getPush(String type) {
@@ -575,6 +512,15 @@ public class PPApplication extends Application {
     }
 
     public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
+        if (finalAction == null) {
+            finalAction = new Action() {
+                @Override
+                public void run() throws Exception {
+                    //do nothing
+                }
+            };
+        }
+
         result.subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doFinally(finalAction)

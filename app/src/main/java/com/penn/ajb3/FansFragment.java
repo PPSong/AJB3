@@ -102,52 +102,27 @@ public class FansFragment extends Fragment {
 
                         Observable<String> result = PPRetrofit.getInstance().getPPService().follow(curUserId);
 
-                        result.subscribeOn(Schedulers.newThread())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .doFinally(new Action() {
-                                    @Override
-                                    public void run() throws Exception {
-                                        objWaiting.remove(curUserId);
+                        Action callFinal = new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                objWaiting.remove(curUserId);
 
-                                        int index = -1;
-                                        for (int i = 0; i < data.size(); i++) {
-                                            RMRelatedUser rmRelatedUser = data.get(i);
-                                            if (rmRelatedUser.get_id().equals(curUserId)) {
-                                                index = i;
-                                                break;
-                                            }
-                                        }
-
-                                        if (index > -1) {
-                                            rvAdapter.notifyItemChanged(index);
-                                        }
+                                int index = -1;
+                                for (int i = 0; i < data.size(); i++) {
+                                    RMRelatedUser rmRelatedUser = data.get(i);
+                                    if (rmRelatedUser.get_id().equals(curUserId)) {
+                                        index = i;
+                                        break;
                                     }
-                                })
-                                .subscribe(
-                                        new Consumer<String>() {
-                                            @Override
-                                            public void accept(@NonNull final String s) throws Exception {
-                                                //do nothing
-                                            }
-                                        },
-                                        new Consumer<Throwable>() {
-                                            @Override
-                                            public void accept(@NonNull Throwable throwable) {
-                                                try {
-                                                    if (throwable instanceof HttpException) {
-                                                        HttpException exception = (HttpException) throwable;
-                                                        Log.v("ppLog", "http exception:" + exception.response().errorBody().string());
-                                                        PPApplication.showError("http exception:" + exception.response().errorBody().string());
-                                                    } else {
-                                                        Log.v("ppLog", throwable.toString());
-                                                        PPApplication.showError(throwable.toString());
-                                                    }
-                                                } catch (Exception e) {
-                                                    Log.v("ppLog", e.toString());
-                                                    PPApplication.showError(e.toString());
-                                                }
-                                            }
-                                        });
+                                }
+
+                                if (index > -1) {
+                                    rvAdapter.notifyItemChanged(index);
+                                }
+                            }
+                        };
+
+                        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
                     }
                 });
             }
