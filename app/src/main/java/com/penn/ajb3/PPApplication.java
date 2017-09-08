@@ -37,6 +37,7 @@ import retrofit2.HttpException;
 
 import static com.penn.ajb3.R.id.email;
 import static java.security.AccessController.getContext;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Created by penn on 31/08/2017.

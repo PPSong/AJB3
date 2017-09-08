@@ -2,6 +2,7 @@ package com.penn.ajb3;
 
 import android.app.ActionBar;
 import android.databinding.DataBindingUtil;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -219,9 +220,22 @@ public class AllUsersActivity extends AppCompatActivity {
             }
         };
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callSuccess, PPApplication.callFailure);
+        Action callFinal = new Action() {
+            @Override
+            public void run() throws Exception {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        binding.mainPbView.setVisibility(View.INVISIBLE);
+                    }
+
+                }, 200); // 5000ms delay
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, callFinal);
 
         rvAdapter = new RelatedUserListAdapter();
         binding.mainRv.setLayoutManager(new LinearLayoutManager(this));
