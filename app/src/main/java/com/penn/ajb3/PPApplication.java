@@ -573,4 +573,11 @@ public class PPApplication extends Application {
         Intent intent = new Intent(activity, LoginActivity.class);
         activity.startActivity(intent);
     }
+
+    public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
+        result.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doFinally(finalAction)
+                .subscribe(callSuccess, callFailure);
+    }
 }
