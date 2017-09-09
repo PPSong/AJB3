@@ -19,6 +19,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.penn.ajb3.databinding.ActivityAllUsersBinding;
 import com.penn.ajb3.databinding.AllUsersUserCellBinding;
+import com.penn.ajb3.databinding.ClickToLoadMoreBinding;
+import com.penn.ajb3.databinding.LoadingMoreBinding;
+import com.penn.ajb3.databinding.NoMoreBinding;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -30,6 +33,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -39,12 +43,19 @@ import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import retrofit2.HttpException;
 
+import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING;
+import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING_NOT_START;
+import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_ALL;
+import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_FAILED;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class AllUsersActivity extends AppCompatActivity {
 
     private Set<String> objWaiting = new HashSet<String>();
     private ArrayList<AllUsersActivity.OtherUser> otherUsers;
+    private LinearLayoutManager linearLayoutManager;
+
+    private static final int pageSize = 20;
 
     public class OtherUser {
         public String _id;
@@ -84,25 +95,120 @@ public class AllUsersActivity extends AppCompatActivity {
         }
     }
 
-    public class RelatedUserListAdapter extends RecyclerView.Adapter<AllUsersActivity.RelatedUserListAdapter.OtherUserVH> {
+    public class RelatedUserListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        //type
+        public static final int NORMAL = 0;
+        public static final int LOADING_MORE = 1;
+        public static final int CLICK_TO_LOAD_MORE = 2;
+        public static final int NO_MORE = 3;
+
+        //status
+        public static final int LOADING_NOT_START = 1;
+        public static final int LOADING = 2;
+        public static final int LOAD_FAILED = 3;
+        public static final int LOAD_ALL = 4;
+
+        public int loadingStatus = LOADING_NOT_START;
 
         @Override
-        public AllUsersActivity.RelatedUserListAdapter.OtherUserVH onCreateViewHolder(ViewGroup parent, int viewType) {
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
 
-            AllUsersUserCellBinding allUsersUserCellBinding = AllUsersUserCellBinding.inflate(layoutInflater, parent, false);
+            switch (viewType) {
+                case NORMAL:
+                    AllUsersUserCellBinding allUsersUserCellBinding = AllUsersUserCellBinding.inflate(layoutInflater, parent, false);
+                    return new AllUsersActivity.RelatedUserListAdapter.OtherUserVH(allUsersUserCellBinding);
+                case LOADING_MORE:
+                    LoadingMoreBinding loadingMoreBinding = LoadingMoreBinding.inflate(layoutInflater, parent, false);
+                    return new AllUsersActivity.RelatedUserListAdapter.LoadingMoreVH(loadingMoreBinding);
+                case CLICK_TO_LOAD_MORE:
+                    ClickToLoadMoreBinding clickToLoadMoreBinding = ClickToLoadMoreBinding.inflate(layoutInflater, parent, false);
+                    clickToLoadMoreBinding.clickToLoadMoreTv.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            rvAdapter.loadingStatus = LOADING;
+                            final int curSize = otherUsers.size();
 
-            return new AllUsersActivity.RelatedUserListAdapter.OtherUserVH(allUsersUserCellBinding);
+                            binding.mainRv.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    rvAdapter.notifyItemChanged(curSize);
+
+                                    binding.mainRv.scrollToPosition(curSize);
+
+                                    loadMore();
+                                }
+                            });
+                        }
+                    });
+                    return new AllUsersActivity.RelatedUserListAdapter.ClickToLoadMoreVH(clickToLoadMoreBinding);
+                case NO_MORE:
+                    NoMoreBinding noMoreBinding = NoMoreBinding.inflate(layoutInflater, parent, false);
+                    return new AllUsersActivity.RelatedUserListAdapter.NoMoreVH(noMoreBinding);
+                default:
+                    throw new Error("onCreateViewHolder 类型错误");
+            }
         }
 
         @Override
-        public void onBindViewHolder(AllUsersActivity.RelatedUserListAdapter.OtherUserVH holder, int position) {
-            holder.bind(otherUsers.get(position));
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+            if (holder instanceof OtherUserVH) {
+                ((OtherUserVH) holder).bind(otherUsers.get(position));
+            }
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (position < otherUsers.size()) {
+                return NORMAL;
+            } else {
+                switch (loadingStatus) {
+                    case LOADING:
+                        return LOADING_MORE;
+                    case LOAD_FAILED:
+                        return CLICK_TO_LOAD_MORE;
+                    case LOAD_ALL:
+                        return NO_MORE;
+                    default:
+                        throw new Error("getItemViewType 类型错误");
+                }
+            }
         }
 
         @Override
         public int getItemCount() {
-            return otherUsers.size();
+            if (loadingStatus == LOADING_NOT_START) {
+                return otherUsers.size();
+            } else {
+                return otherUsers.size() + 1;
+            }
+        }
+
+        public class NoMoreVH extends RecyclerView.ViewHolder {
+            private NoMoreBinding binding;
+
+            public NoMoreVH(NoMoreBinding binding) {
+                super(binding.getRoot());
+                this.binding = binding;
+            }
+        }
+
+        public class LoadingMoreVH extends RecyclerView.ViewHolder {
+            private LoadingMoreBinding binding;
+
+            public LoadingMoreVH(LoadingMoreBinding binding) {
+                super(binding.getRoot());
+                this.binding = binding;
+            }
+        }
+
+        public class ClickToLoadMoreVH extends RecyclerView.ViewHolder {
+            private ClickToLoadMoreBinding binding;
+
+            public ClickToLoadMoreVH(ClickToLoadMoreBinding binding) {
+                super(binding.getRoot());
+                this.binding = binding;
+            }
         }
 
         public class OtherUserVH extends RecyclerView.ViewHolder {
@@ -196,7 +302,8 @@ public class AllUsersActivity extends AppCompatActivity {
 
         otherUsers = new ArrayList<OtherUser>();
 
-        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers();
+        //todo 需要使用一个绝对最小的字符串代替"0"
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers("0");
 
         Consumer<Object> callSuccess = new Consumer<Object>() {
             @Override
@@ -217,6 +324,49 @@ public class AllUsersActivity extends AppCompatActivity {
                     otherUsers.add(obj);
                 }
                 rvAdapter.notifyDataSetChanged();
+
+                if (otherUsers.size() == pageSize) {
+                    rvAdapter.loadingStatus = LOADING_NOT_START;
+                } else {
+                    rvAdapter.loadingStatus = LOAD_ALL;
+                }
+            }
+        };
+
+        Consumer<Throwable> callFailure = new Consumer<Throwable>() {
+            @Override
+            public void accept(@NonNull Throwable throwable) {
+                rvAdapter.loadingStatus = LOAD_FAILED;
+                try {
+                    if (throwable instanceof HttpException) {
+                        //http非200返回code错误
+                        HttpException exception = (HttpException) throwable;
+                        String errorBodyString = exception.response().errorBody().string();
+                        Log.v("ppLog", errorBodyString);
+                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
+                        if (code < 0) {
+                            //用户自定义错误
+                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
+                            Log.v("ppLog", "http exception:" + error);
+                            PPApplication.showError("http exception:" + error);
+                            if (code == -1000) {
+                                PPApplication.logout();
+                            }
+                        } else {
+                            //http常规错误
+                            Log.v("ppLog", "http exception:" + errorBodyString);
+                            PPApplication.showError("http exception:" + errorBodyString);
+                        }
+                    } else {
+                        //执行callSuccess过程中错误
+                        Log.v("ppLog", throwable.toString());
+                        PPApplication.showError(throwable.toString());
+                    }
+                } catch (Exception e) {
+                    //执行callFailure过程中错误
+                    Log.v("ppLog", e.toString());
+                    PPApplication.showError(e.toString());
+                }
             }
         };
 
@@ -235,11 +385,112 @@ public class AllUsersActivity extends AppCompatActivity {
             }
         };
 
-        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, callFinal);
+        PPApplication.apiRequest(result, callSuccess, callFailure, callFinal);
 
         rvAdapter = new RelatedUserListAdapter();
-        binding.mainRv.setLayoutManager(new LinearLayoutManager(this));
+        linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setStackFromEnd(true);
+        binding.mainRv.setLayoutManager(linearLayoutManager);
         binding.mainRv.setAdapter(rvAdapter);
+        binding.mainRv.setHasFixedSize(true);
+
+        binding.mainRv.setOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int totalItemCount = linearLayoutManager.getItemCount();
+                int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+
+                if (rvAdapter.loadingStatus == LOADING_NOT_START && totalItemCount <= (lastVisibleItem + 1)) {
+                    rvAdapter.loadingStatus = LOADING;
+                    rvAdapter.notifyItemInserted(otherUsers.size());
+
+                    loadMore();
+                }
+            }
+        });
+    }
+
+    private void loadMore() {
+        String lastUsername = otherUsers.get(otherUsers.size() - 1).username;
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers(lastUsername);
+
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                JsonArray users = ppFromString(s, null).getAsJsonArray();
+                int startPosition = otherUsers.size();
+                int size = users.size();
+                for (JsonElement item : users) {
+
+                    String itemStr = item.toString();
+
+                    OtherUser obj = new OtherUser();
+                    obj._id = ppFromString(itemStr, "_id").getAsString();
+                    obj.username = ppFromString(itemStr, "username").getAsString();
+                    obj.nickname = ppFromString(itemStr, "nickname").getAsString();
+                    obj.sex = ppFromString(itemStr, "sex").getAsString();
+                    obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+
+                    otherUsers.add(obj);
+                }
+
+                if (users.size() == pageSize) {
+                    rvAdapter.loadingStatus = LOADING_NOT_START;
+                    rvAdapter.notifyItemRemoved(otherUsers.size());
+                } else {
+                    rvAdapter.loadingStatus = LOAD_ALL;
+                    rvAdapter.notifyItemChanged(otherUsers.size());
+                }
+
+                rvAdapter.notifyItemRangeInserted(startPosition, size);
+
+                //屏幕滚动到新加载的第一条
+                binding.mainRv.scrollToPosition(startPosition);
+            }
+        };
+
+        Consumer<Throwable> callFailure = new Consumer<Throwable>() {
+            @Override
+            public void accept(@NonNull Throwable throwable) {
+                rvAdapter.loadingStatus = LOAD_FAILED;
+                rvAdapter.notifyItemRemoved(otherUsers.size());
+                try {
+                    if (throwable instanceof HttpException) {
+                        //http非200返回code错误
+                        HttpException exception = (HttpException) throwable;
+                        String errorBodyString = exception.response().errorBody().string();
+                        Log.v("ppLog", errorBodyString);
+                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
+                        if (code < 0) {
+                            //用户自定义错误
+                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
+                            Log.v("ppLog", "http exception:" + error);
+                            PPApplication.showError("http exception:" + error);
+                            if (code == -1000) {
+                                PPApplication.logout();
+                            }
+                        } else {
+                            //http常规错误
+                            Log.v("ppLog", "http exception:" + errorBodyString);
+                            PPApplication.showError("http exception:" + errorBodyString);
+                        }
+                    } else {
+                        //执行callSuccess过程中错误
+                        Log.v("ppLog", throwable.toString());
+                        PPApplication.showError(throwable.toString());
+                    }
+                } catch (Exception e) {
+                    //执行callFailure过程中错误
+                    Log.v("ppLog", e.toString());
+                    PPApplication.showError(e.toString());
+                }
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, callFailure, null);
     }
 
     @Override

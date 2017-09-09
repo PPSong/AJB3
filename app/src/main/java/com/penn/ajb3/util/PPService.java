@@ -21,8 +21,8 @@ public interface PPService {
             @Field("password") String password
     );
 
-    @POST("getOtherUsers")
-    Observable<String> getOtherUsers();
+    @POST("getOtherUsers/{afterUsername}")
+    Observable<String> getOtherUsers(@Path("afterUsername") String afterUsername);
 
     @POST("getNewFollows/{startTime}")
     Observable<String> getNewFollows(@Path("startTime") long startTime);
