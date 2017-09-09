@@ -47,6 +47,7 @@ import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING_NOT_START;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_ALL;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_FAILED;
+import static com.penn.ajb3.PPApplication.callFailure;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class AllUsersActivity extends AppCompatActivity {
@@ -132,7 +133,8 @@ public class AllUsersActivity extends AppCompatActivity {
                             binding.mainRv.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    rvAdapter.notifyItemChanged(curSize);
+                                    rvAdapter.notifyItemRemoved(curSize);
+                                    rvAdapter.notifyItemRemoved(curSize);
 
                                     binding.mainRv.scrollToPosition(curSize);
 
@@ -333,42 +335,14 @@ public class AllUsersActivity extends AppCompatActivity {
             }
         };
 
-        Consumer<Throwable> callFailure = new Consumer<Throwable>() {
+        PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
             @Override
-            public void accept(@NonNull Throwable throwable) {
+            public void needToDo() {
                 rvAdapter.loadingStatus = LOAD_FAILED;
-                try {
-                    if (throwable instanceof HttpException) {
-                        //http非200返回code错误
-                        HttpException exception = (HttpException) throwable;
-                        String errorBodyString = exception.response().errorBody().string();
-                        Log.v("ppLog", errorBodyString);
-                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
-                        if (code < 0) {
-                            //用户自定义错误
-                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
-                            Log.v("ppLog", "http exception:" + error);
-                            PPApplication.showError("http exception:" + error);
-                            if (code == -1000) {
-                                PPApplication.logout();
-                            }
-                        } else {
-                            //http常规错误
-                            Log.v("ppLog", "http exception:" + errorBodyString);
-                            PPApplication.showError("http exception:" + errorBodyString);
-                        }
-                    } else {
-                        //执行callSuccess过程中错误
-                        Log.v("ppLog", throwable.toString());
-                        PPApplication.showError(throwable.toString());
-                    }
-                } catch (Exception e) {
-                    //执行callFailure过程中错误
-                    Log.v("ppLog", e.toString());
-                    PPApplication.showError(e.toString());
-                }
             }
         };
+
+        Consumer<Throwable> callFailure = new PPApplication.CallFailure(doOnCallFailure).getCallFailure();
 
         Action callFinal = new Action() {
             @Override
@@ -389,7 +363,7 @@ public class AllUsersActivity extends AppCompatActivity {
 
         rvAdapter = new RelatedUserListAdapter();
         linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setStackFromEnd(true);
+        //linearLayoutManager.setStackFromEnd(true);
         binding.mainRv.setLayoutManager(linearLayoutManager);
         binding.mainRv.setAdapter(rvAdapter);
         binding.mainRv.setHasFixedSize(true);
@@ -402,7 +376,10 @@ public class AllUsersActivity extends AppCompatActivity {
                 int totalItemCount = linearLayoutManager.getItemCount();
                 int lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
 
+                Log.v("ppLog", "totalItemCount:" + totalItemCount + ",lastVisibleItem:" + lastVisibleItem);
+
                 if (rvAdapter.loadingStatus == LOADING_NOT_START && totalItemCount <= (lastVisibleItem + 1)) {
+                    Log.v("ppLog", "LOAD_MORE");
                     rvAdapter.loadingStatus = LOADING;
                     rvAdapter.notifyItemInserted(otherUsers.size());
 
@@ -452,43 +429,15 @@ public class AllUsersActivity extends AppCompatActivity {
             }
         };
 
-        Consumer<Throwable> callFailure = new Consumer<Throwable>() {
+        PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
             @Override
-            public void accept(@NonNull Throwable throwable) {
+            public void needToDo() {
                 rvAdapter.loadingStatus = LOAD_FAILED;
                 rvAdapter.notifyItemRemoved(otherUsers.size());
-                try {
-                    if (throwable instanceof HttpException) {
-                        //http非200返回code错误
-                        HttpException exception = (HttpException) throwable;
-                        String errorBodyString = exception.response().errorBody().string();
-                        Log.v("ppLog", errorBodyString);
-                        int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
-                        if (code < 0) {
-                            //用户自定义错误
-                            String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
-                            Log.v("ppLog", "http exception:" + error);
-                            PPApplication.showError("http exception:" + error);
-                            if (code == -1000) {
-                                PPApplication.logout();
-                            }
-                        } else {
-                            //http常规错误
-                            Log.v("ppLog", "http exception:" + errorBodyString);
-                            PPApplication.showError("http exception:" + errorBodyString);
-                        }
-                    } else {
-                        //执行callSuccess过程中错误
-                        Log.v("ppLog", throwable.toString());
-                        PPApplication.showError(throwable.toString());
-                    }
-                } catch (Exception e) {
-                    //执行callFailure过程中错误
-                    Log.v("ppLog", e.toString());
-                    PPApplication.showError(e.toString());
-                }
             }
         };
+
+        Consumer<Throwable> callFailure = new PPApplication.CallFailure(doOnCallFailure).getCallFailure();
 
         PPApplication.apiRequest(result, callSuccess, callFailure, null);
     }

@@ -573,4 +573,57 @@ public class PPApplication extends Application {
             }
         }
     };
+
+    public interface DoOnCallFailure {
+        void needToDo();
+    }
+
+    public static class CallFailure {
+        private DoOnCallFailure doOnCallFailure;
+        private Consumer<Throwable> callFailure;
+
+        public CallFailure(final DoOnCallFailure doOnCallFailure) {
+            this.doOnCallFailure = doOnCallFailure;
+            this.callFailure = new Consumer<Throwable>() {
+                @Override
+                public void accept(@NonNull Throwable throwable) {
+                    doOnCallFailure.needToDo();
+                    try {
+                        if (throwable instanceof HttpException) {
+                            //http非200返回code错误
+                            HttpException exception = (HttpException) throwable;
+                            String errorBodyString = exception.response().errorBody().string();
+                            Log.v("ppLog", errorBodyString);
+                            int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
+                            if (code < 0) {
+                                //用户自定义错误
+                                String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
+                                Log.v("ppLog", "http exception:" + error);
+                                PPApplication.showError("http exception:" + error);
+                                if (code == -1000) {
+                                    PPApplication.logout();
+                                }
+                            } else {
+                                //http常规错误
+                                Log.v("ppLog", "http exception:" + errorBodyString);
+                                PPApplication.showError("http exception:" + errorBodyString);
+                            }
+                        } else {
+                            //执行callSuccess过程中错误
+                            Log.v("ppLog", throwable.toString());
+                            PPApplication.showError(throwable.toString());
+                        }
+                    } catch (Exception e) {
+                        //执行callFailure过程中错误
+                        Log.v("ppLog", e.toString());
+                        PPApplication.showError(e.toString());
+                    }
+                }
+            };
+        }
+
+        public Consumer<Throwable> getCallFailure() {
+            return this.callFailure;
+        }
+    }
 }
