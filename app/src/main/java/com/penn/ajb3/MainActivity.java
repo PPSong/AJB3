@@ -76,6 +76,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         Log.v("ppLog", "onCreate");
         super.onCreate(savedInstanceState);
+        if (savedInstanceState != null) {
+            Log.v("ppLog", "savedInstanceState not null");
+        } else {
+            Log.v("ppLog", "savedInstanceState is null");
+        }
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         setSupportActionBar(binding.toolbar);
@@ -106,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.v("ppLog", "onDestroy");
         realm.close();
         super.onDestroy();
     }

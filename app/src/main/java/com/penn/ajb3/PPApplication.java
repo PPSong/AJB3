@@ -2,6 +2,7 @@ package com.penn.ajb3;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -511,8 +512,17 @@ public class PPApplication extends Application {
         removePrefItem(MY_ID);
         removePrefItem(AUTH_BODY);
         removePrefItem(USERNAME);
-        Intent intent = new Intent(appContext, LoginActivity.class);
-        appContext.startActivity(intent);
+
+        Intent errorActivity = new Intent("com.error.activity");//this has to match your intent filter
+        errorActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(appContext, 0, errorActivity, 0);
+        try {
+            pendingIntent.send();
+        }
+        catch (PendingIntent.CanceledException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
