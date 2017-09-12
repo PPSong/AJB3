@@ -382,6 +382,11 @@ public class AllUsersActivity extends AppCompatActivity {
 
                 //屏幕滚动到新加载的第一条
                 binding.mainRv.scrollToPosition(startPosition);
+
+                if (fromUsername != null) {
+                    //说明是setup中调用
+                    binding.mainPbView.setVisibility(View.INVISIBLE);
+                }
             }
         };
 
@@ -402,17 +407,6 @@ public class AllUsersActivity extends AppCompatActivity {
 
         PPApplication.apiRequest(result, callSuccess, callFailure, null);
     }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//            // Respond to the action bar's Up/Home button
-//            case android.R.id.home:
-//                NavUtils.navigateUpFromSameTask(this);
-//                return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
 
     @Override
     protected void onDestroy() {
