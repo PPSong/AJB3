@@ -127,18 +127,11 @@ public class AllUsersActivity extends AppCompatActivity {
                     clickToLoadMoreBinding.clickToLoadMoreTv.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            rvAdapter.loadingStatus = LOADING;
-                            final int curSize = otherUsers.size();
 
                             binding.mainRv.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    rvAdapter.notifyItemRemoved(curSize);
-                                    rvAdapter.notifyItemRemoved(curSize);
-
-                                    binding.mainRv.scrollToPosition(curSize);
-
-                                    loadMore();
+                                    loadMore(null);
                                 }
                             });
                         }
@@ -304,66 +297,8 @@ public class AllUsersActivity extends AppCompatActivity {
 
         otherUsers = new ArrayList<OtherUser>();
 
-        //todo 需要使用一个绝对最小的字符串代替"0"
-        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers("0");
-
-        Consumer<Object> callSuccess = new Consumer<Object>() {
-            @Override
-            public void accept(@NonNull final Object sObj) throws Exception {
-                String s = sObj.toString();
-                JsonArray users = ppFromString(s, null).getAsJsonArray();
-                for (JsonElement item : users) {
-
-                    String itemStr = item.toString();
-
-                    OtherUser obj = new OtherUser();
-                    obj._id = ppFromString(itemStr, "_id").getAsString();
-                    obj.username = ppFromString(itemStr, "username").getAsString();
-                    obj.nickname = ppFromString(itemStr, "nickname").getAsString();
-                    obj.sex = ppFromString(itemStr, "sex").getAsString();
-                    obj.avatar = ppFromString(itemStr, "avatar").getAsString();
-
-                    otherUsers.add(obj);
-                }
-                rvAdapter.notifyDataSetChanged();
-
-                if (otherUsers.size() == pageSize) {
-                    rvAdapter.loadingStatus = LOADING_NOT_START;
-                } else {
-                    rvAdapter.loadingStatus = LOAD_ALL;
-                }
-            }
-        };
-
-        PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
-            @Override
-            public void needToDo() {
-                rvAdapter.loadingStatus = LOAD_FAILED;
-            }
-        };
-
-        Consumer<Throwable> callFailure = new PPApplication.CallFailure(doOnCallFailure).getCallFailure();
-
-        Action callFinal = new Action() {
-            @Override
-            public void run() throws Exception {
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        binding.mainPbView.setVisibility(View.INVISIBLE);
-                    }
-
-                }, 200); // 5000ms delay
-            }
-        };
-
-        PPApplication.apiRequest(result, callSuccess, callFailure, callFinal);
-
         rvAdapter = new RelatedUserListAdapter();
         linearLayoutManager = new LinearLayoutManager(this);
-        //linearLayoutManager.setStackFromEnd(true);
         binding.mainRv.setLayoutManager(linearLayoutManager);
         binding.mainRv.setAdapter(rvAdapter);
         binding.mainRv.setHasFixedSize(true);
@@ -380,18 +315,38 @@ public class AllUsersActivity extends AppCompatActivity {
 
                 if (rvAdapter.loadingStatus == LOADING_NOT_START && totalItemCount <= (lastVisibleItem + 1)) {
                     Log.v("ppLog", "LOAD_MORE");
-                    rvAdapter.loadingStatus = LOADING;
-                    rvAdapter.notifyItemInserted(otherUsers.size());
 
-                    loadMore();
+                    loadMore(null);
                 }
             }
         });
+
+        //todo 需要使用一个绝对最小的字符串代替"0"
+        loadMore("0");
     }
 
-    private void loadMore() {
-        String lastUsername = otherUsers.get(otherUsers.size() - 1).username;
-        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers(lastUsername);
+    private void loadMore(final String fromUsername) {
+        if (rvAdapter.loadingStatus != LOADING_NOT_START) {
+            rvAdapter.notifyItemRemoved(otherUsers.size());
+        }
+
+        rvAdapter.loadingStatus = LOADING;
+        rvAdapter.notifyItemInserted(otherUsers.size());
+
+        binding.mainRv.scrollToPosition(otherUsers.size());
+
+        String username;
+        if (fromUsername != null) {
+            username = fromUsername;
+        } else {
+            if (otherUsers.size() > 0) {
+                username = otherUsers.get(otherUsers.size() - 1).username;
+            } else {
+                username = "0";
+            }
+        }
+
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers(username);
 
         Consumer<Object> callSuccess = new Consumer<Object>() {
             @Override
@@ -419,7 +374,8 @@ public class AllUsersActivity extends AppCompatActivity {
                     rvAdapter.notifyItemRemoved(otherUsers.size());
                 } else {
                     rvAdapter.loadingStatus = LOAD_ALL;
-                    rvAdapter.notifyItemChanged(otherUsers.size());
+                    rvAdapter.notifyItemRemoved(otherUsers.size());
+                    rvAdapter.notifyItemInserted(otherUsers.size());
                 }
 
                 rvAdapter.notifyItemRangeInserted(startPosition, size);
@@ -432,8 +388,13 @@ public class AllUsersActivity extends AppCompatActivity {
         PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
             @Override
             public void needToDo() {
+                if (fromUsername != null) {
+                    //说明是setup中调用
+                    binding.mainPbView.setVisibility(View.INVISIBLE);
+                }
                 rvAdapter.loadingStatus = LOAD_FAILED;
                 rvAdapter.notifyItemRemoved(otherUsers.size());
+                rvAdapter.notifyItemInserted(otherUsers.size());
             }
         };
 
