@@ -27,6 +27,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="com.error.activity" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
@@ -38,7 +39,7 @@
         <activity android:name=".TestActivity" />
         <activity
             android:name=".AllUsersActivity"
-            android:parentActivityName=".MainActivity"></activity>
+            android:parentActivityName=".MainActivity" />
 
         <service
             android:name=".util.SocketService"
@@ -50,9 +51,11 @@
             android:enabled="true"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".PhotoActivity"></activity>
     </application>
 
 </manifest>

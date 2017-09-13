@@ -18,6 +18,7 @@ import com.penn.ajb3.databinding.FollowsUserCellBinding;
 import com.penn.ajb3.databinding.FragmentFollowsBinding;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+import com.squareup.picasso.Picasso;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -77,6 +78,12 @@ public class FollowsFragment extends Fragment {
             public RelatedUserVH(FollowsUserCellBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
+
+                Picasso.with(getContext())
+                        .load("https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo/bd_logo1_31bdc765.png")
+                        .placeholder(android.R.drawable.ic_menu_myplaces)
+                        .error(android.R.drawable.stat_notify_error)
+                        .into(binding.avatarIv);
 
                 binding.unFollowBt.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -188,6 +195,7 @@ public class FollowsFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.v("ppLog", "follow onCreate");
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -198,6 +206,7 @@ public class FollowsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.v("ppLog", "follow onCreateView");
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_follows, container, false);
         View view = binding.getRoot();
 

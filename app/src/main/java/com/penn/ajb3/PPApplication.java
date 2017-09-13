@@ -5,7 +5,9 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -53,7 +55,9 @@ public class PPApplication extends Application {
         OBJECT
     }
 
-    private static Context appContext;
+    public static Context appContext;
+
+    public static String uuid;
 
     private static final String APP_NAME = "PPJ";
 
@@ -505,6 +509,8 @@ public class PPApplication extends Application {
         appContext = this;
 
         Realm.init(appContext);
+
+        uuid = Settings.Secure.getString(appContext.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
     public static void logout() {
@@ -518,8 +524,7 @@ public class PPApplication extends Application {
         PendingIntent pendingIntent = PendingIntent.getActivity(appContext, 0, errorActivity, 0);
         try {
             pendingIntent.send();
-        }
-        catch (PendingIntent.CanceledException e) {
+        } catch (PendingIntent.CanceledException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

@@ -21,6 +21,9 @@ android {
             ext.enableCrashlytics = false
         }
     }
+    packagingOptions {
+        exclude 'META-INF/rxjava.properties'
+    }
 
     aaptOptions {
         cruncherEnabled false
@@ -88,5 +91,8 @@ dependencies {
     compile 'com.github.nkzawa:socket.io-client:0.3.0'
     compile 'org.greenrobot:eventbus:3.0.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.qiniu:qiniu-android-sdk:7.3.+'
+    compile 'com.jph.takephoto:takephoto_library:4.0.3'
     testCompile 'junit:junit:4.12'
 }

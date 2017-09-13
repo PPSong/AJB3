@@ -44,4 +44,7 @@ public interface PPService {
 
     @POST("follow/{userId}")
     Observable<String> follow(@Path("userId") String userId);
+
+    @POST("getQiniuToken")
+    Observable<String> getQiniuToken();
 }

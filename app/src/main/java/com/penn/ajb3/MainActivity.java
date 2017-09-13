@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         // Set up the ViewPager with the sections adapter.
         mViewPager = binding.container;
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(3);
+        //mViewPager.setOffscreenPageLimit(3);
 
         binding.tabs.setupWithViewPager(mViewPager);
 
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             PPApplication.showDB();
             return true;
         } else if (id == R.id.action_test) {
-            Intent intent = new Intent(this, TestActivity.class);
+            Intent intent = new Intent(this, PhotoActivity.class);
             startActivity(intent);
 
             return true;
