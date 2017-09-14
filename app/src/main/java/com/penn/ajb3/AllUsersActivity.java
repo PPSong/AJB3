@@ -23,6 +23,7 @@ import com.penn.ajb3.databinding.ClickToLoadMoreBinding;
 import com.penn.ajb3.databinding.LoadingMoreBinding;
 import com.penn.ajb3.databinding.NoMoreBinding;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
+import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
@@ -64,6 +65,7 @@ public class AllUsersActivity extends AppCompatActivity {
         public String nickname;
         public String sex;
         public String avatar;
+        public long updateTime;
 
         public int followable() {
             try (Realm realm = Realm.getDefaultInstance()) {
@@ -359,14 +361,35 @@ public class AllUsersActivity extends AppCompatActivity {
 
                     String itemStr = item.toString();
 
-                    OtherUser obj = new OtherUser();
+                    final OtherUser obj = new OtherUser();
                     obj._id = ppFromString(itemStr, "_id").getAsString();
                     obj.username = ppFromString(itemStr, "username").getAsString();
                     obj.nickname = ppFromString(itemStr, "nickname").getAsString();
                     obj.sex = ppFromString(itemStr, "sex").getAsString();
                     obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+                    obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
 
                     otherUsers.add(obj);
+
+                    //查看本地relatedUser中是否有对应用户需要更新信息
+                    try (Realm realm = Realm.getDefaultInstance()) {
+                        realm.executeTransaction(new Realm.Transaction() {
+                            @Override
+                            public void execute(Realm realm) {
+                                RMRelatedUser rmRelatedUser = realm.where(RMRelatedUser.class)
+                                        .equalTo("_id", obj._id)
+                                        .lessThan("updateTime", obj.updateTime)
+                                        .findFirst();
+
+                                if (rmRelatedUser != null) {
+                                    rmRelatedUser.nickname = obj.nickname;
+                                    rmRelatedUser.sex = obj.sex;
+                                    rmRelatedUser.avatar = obj.avatar;
+                                    rmRelatedUser.updateTime = obj.updateTime;
+                                }
+                            }
+                        });
+                    }
                 }
 
                 if (users.size() == pageSize) {
