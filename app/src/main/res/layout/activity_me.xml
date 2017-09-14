@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.penn.ajb3.MeActivity">
+
+    <data>
+
+        <variable
+            name="data"
+            type="com.penn.ajb3.realm.RMMyProfile" />
+
+    </data>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/main_civ"
+            avatar_image_name="@{data.avatar}"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center|top"
+            android:layout_marginTop="16dp" />
+
+    </FrameLayout>
+
+</layout>

@@ -47,4 +47,7 @@ public interface PPService {
 
     @POST("getQiniuToken")
     Observable<String> getQiniuToken();
+
+    @POST("updateAvatar/{avatarImageName}")
+    Observable<String> updateAvatar(@Path("avatarImageName") String avatarImageName);
 }

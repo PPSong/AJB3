@@ -5,11 +5,13 @@ import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.databinding.BindingAdapter;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.gson.JsonArray;
@@ -23,13 +25,24 @@ import com.penn.ajb3.messageEvent.UserSignIn;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+import com.qiniu.android.common.FixedZone;
+import com.qiniu.android.http.ResponseInfo;
+import com.qiniu.android.storage.Configuration;
+import com.qiniu.android.storage.UpCompletionHandler;
+import com.qiniu.android.storage.UpProgressHandler;
+import com.qiniu.android.storage.UploadManager;
+import com.qiniu.android.storage.UploadOptions;
+import com.squareup.picasso.Picasso;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
 import de.jonasrottmann.realmbrowser.RealmBrowser;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
@@ -59,12 +72,20 @@ public class PPApplication extends Application {
 
     public static String uuid;
 
+    public static final String qiniuBase = "http://oemogmm69.bkt.clouddn.com/";
+
     private static final String APP_NAME = "PPJ";
 
     //preference keys
     public static final String AUTH_BODY = "AUTH_BODY";
     public static final String MY_ID = "MY_ID";
     public static final String USERNAME = "USERNAME";
+
+    private static Configuration config = new Configuration.Builder()
+            .zone(FixedZone.zone0)
+            .build();
+
+    private static UploadManager uploadManager = new UploadManager(config);
 
     //设置pref值
     public static void setPrefStringValue(String key, String value) {
@@ -230,6 +251,42 @@ public class PPApplication extends Application {
                 getNewFollows();
                 getNewFans();
                 getNewFriends();
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+    }
+
+    public static void getMyProfile() {
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getMyProfile();
+
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                final String s = sObj.toString();
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            String itemStr = ppFromString(s, null).toString();
+                            RMMyProfile obj = realm.where(RMMyProfile.class).findFirst();
+
+                            if (obj == null) {
+                                obj = new RMMyProfile();
+                                obj._id = ppFromString(itemStr, "_id").getAsString();
+                            }
+                            obj.username = ppFromString(itemStr, "username").getAsString();
+                            obj.nickname = ppFromString(itemStr, "nickname").getAsString();
+                            obj.sex = ppFromString(itemStr, "sex").getAsString();
+                            obj.avatar = ppFromString(itemStr, "avatar").getAsString();
+                            obj.updateTime = ppFromString(itemStr, "updateTime").getAsLong();
+
+                            // This will update an existing object with the same primary key
+                            // or create a new object if an object with no primary key = _id
+                            realm.copyToRealmOrUpdate(obj);
+                        }
+                    });
+                }
             }
         };
 
@@ -490,6 +547,8 @@ public class PPApplication extends Application {
             getNewFans();
         } else if (type.equals("get_new_follows") || type.equals("delete_follows")) {
             getNewFollows();
+        } else if (type.equals("profile_updated")) {
+            getMyProfile();
         } else {
             Log.v("ppLog", "getPush none");
         }
@@ -641,4 +700,67 @@ public class PPApplication extends Application {
             return this.callFailure;
         }
     }
+
+    @BindingAdapter({"bind:avatar_image_name"})
+    public static void setAvatarImageName(final ImageView imageView, String imageName) {
+        setImageViewResource(imageView, imageName, 80);
+    }
+
+    public static void setImageViewResource(final ImageView imageView, String pic, int size) {
+        Picasso.with(appContext)
+                .load(getImageUrl(pic, size))
+                .placeholder(android.R.drawable.stat_notify_sync)
+                .error(android.R.drawable.stat_notify_error)
+                .into(imageView);
+    }
+
+    private static String getImageUrl(String imageName, int size) {
+        //如果为空则用默认图片
+        if (TextUtils.isEmpty(imageName)) {
+            imageName = "default";
+        }
+
+        if (imageName.startsWith("http")) {
+            //如果直接是网络地址则直接用
+            return imageName;
+        } else {
+            String result = qiniuBase + imageName + "?imageView2/1/w/" + size + "/h/" + size + "/interlace/1/";
+            Log.v("ppLog", "image url:" + result);
+
+            return result;
+        }
+    }
+
+    public static Observable<String> uploadSingleImage(final byte[] data, final String key, final String token) {
+        return Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(final ObservableEmitter<String> emitter) throws Exception {
+                uploadManager.put(data, key, token,
+                        new UpCompletionHandler() {
+                            @Override
+                            public void complete(String key, ResponseInfo info, JSONObject res) {
+                                //res包含hash、key等信息，具体字段取决于上传策略的设置
+                                if (info.isOK()) {
+                                    Log.i("qiniu", "Upload Success");
+                                    emitter.onNext(key);
+                                    emitter.onComplete();
+                                } else {
+                                    Log.i("qiniu", "Upload Fail");
+                                    //如果失败，这里可以把info信息上报自己的服务器，便于后面分析上传错误原因
+                                    Exception apiError = new Exception("七牛上传:" + key + "失败", new Throwable(info.error.toString()));
+                                    emitter.onError(apiError);
+                                }
+                            }
+                        },
+                        new UploadOptions(null, null, false,
+                                new UpProgressHandler() {
+                                    public void progress(String key, double percent) {
+                                        Log.i("qiniu", key + ": " + percent);
+                                    }
+                                }, null));
+            }
+        });
+    }
+
+
 }

@@ -55,7 +55,8 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".PhotoActivity"></activity>
+        <activity android:name=".PhotoActivity" />
+        <activity android:name=".MeActivity"></activity>
     </application>
 
 </manifest>

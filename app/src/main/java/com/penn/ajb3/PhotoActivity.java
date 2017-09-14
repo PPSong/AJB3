@@ -39,11 +39,6 @@ import java.io.IOException;
 import io.reactivex.Observable;
 import io.reactivex.functions.Consumer;
 
-import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING_NOT_START;
-import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_ALL;
-import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_FAILED;
-import static com.penn.ajb3.PPApplication.ppFromString;
-
 public class PhotoActivity extends TakePhotoActivity {
 
     private TakePhoto takePhoto;

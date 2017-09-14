@@ -16,6 +16,7 @@
 
         <ImageView
             android:id="@+id/avatar_iv"
+            avatar_image_name="@{data.avatar}"
             android:layout_width="48dp"
             android:layout_height="48dp" />
 
