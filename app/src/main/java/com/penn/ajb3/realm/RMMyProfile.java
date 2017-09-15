@@ -18,5 +18,5 @@ public class RMMyProfile extends RealmObject {
     public long getNewFollowsTime;
     public long getNewFansTime;
     public long getNewFriendsTime;
-
+    public long getNewBlocksTime;
 }

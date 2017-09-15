@@ -11,7 +11,6 @@ import android.util.Log;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.penn.ajb3.PPApplication;
-import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.messageEvent.UserLogout;
 import com.penn.ajb3.messageEvent.UserSignIn;
 

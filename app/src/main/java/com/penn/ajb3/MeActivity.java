@@ -3,6 +3,8 @@ package com.penn.ajb3;
 import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,10 +29,12 @@ import com.qiniu.android.storage.UploadOptions;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import io.reactivex.Observable;
@@ -123,25 +127,55 @@ public class MeActivity extends TakePhotoActivity {
         Log.v("ppLog", "getCompressPath:" + path);
 
         File file = new File(path);
-        int size = (int) file.length();
-        final byte[] bytes = new byte[size];
+
+        ExifInterface exif = null;
         try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(file));
-            buf.read(bytes, 0, bytes.length);
-            buf.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            exif = new ExifInterface(file.getPath());
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            Log.v("ppLog", "takeFail:" + e.toString());
             e.printStackTrace();
+
+            return;
+        }
+        int orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL);
+
+        int angle = 0;
+
+        if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            angle = 90;
+        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            angle = 180;
+        } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            angle = 270;
         }
 
-        Log.v("ppLog", "takeSuccess:path:" + path + ", size:" + bytes.length);
+        Matrix mat = new Matrix();
+        mat.postRotate(angle);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 2;
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        Bitmap oldBmp = null;
+        try {
+            oldBmp = BitmapFactory.decodeStream(new FileInputStream(file),
+                    null, options);
+        } catch (FileNotFoundException e) {
+            Log.v("ppLog", "takeFail:" + e.toString());
+            e.printStackTrace();
 
-        binding.mainCiv.setImageBitmap(bitmap);
+            return;
+        }
+
+        Bitmap newBmp = Bitmap.createBitmap(oldBmp, 0, 0, oldBmp.getWidth(),
+                oldBmp.getHeight(), mat, true);
+
+        binding.mainCiv.setImageBitmap(newBmp);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        newBmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        final byte[] bytes = stream.toByteArray();
+        Log.v("ppLog", "bytes:" + bytes.length);
 
         Observable<String> updateAvatarResult =
                 PPRetrofit.getInstance().getPPService().getQiniuToken()

@@ -22,6 +22,7 @@ import com.google.gson.JsonPrimitive;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.messageEvent.UserLogout;
 import com.penn.ajb3.messageEvent.UserSignIn;
+import com.penn.ajb3.realm.BlockUser;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -251,6 +252,7 @@ public class PPApplication extends Application {
                 getNewFollows();
                 getNewFans();
                 getNewFriends();
+                getNewBlocks();
             }
         };
 
@@ -371,6 +373,7 @@ public class PPApplication extends Application {
                 }
 
                 EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                //如果有用Blockuser渲染的页面记录, 需要在这里post对应Event, 便于APP中相应记录重新渲染
             }
         };
 
@@ -540,13 +543,95 @@ public class PPApplication extends Application {
         PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
     }
 
+    public static void getNewBlocks() {
+        long startTime;
+        try (Realm realm = Realm.getDefaultInstance()) {
+            startTime = realm.where(RMMyProfile.class).findFirst().getNewBlocksTime;
+        }
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFriends(startTime);
+
+        Consumer<Object> callSuccess = new Consumer<Object>() {
+            @Override
+            public void accept(@NonNull final Object sObj) throws Exception {
+                String s = sObj.toString();
+                try (Realm realm = Realm.getDefaultInstance()) {
+                    final JsonArray users = ppFromString(s, null).getAsJsonArray();
+
+                    realm.executeTransaction(new Realm.Transaction() {
+                        @Override
+                        public void execute(Realm realm) {
+                            long time = -1;
+
+                            for (JsonElement item : users) {
+                                Log.v("ppLog Blocks", item.toString());
+
+                                String itemStr = item.toString();
+
+                                long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
+                                if (itemTime > time) {
+                                    time = itemTime;
+                                }
+
+                                String _id = ppFromString(itemStr, "_id").getAsString();
+                                boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
+                                BlockUser obj = realm.where(BlockUser.class).equalTo("_id", _id).findFirst();
+
+                                if (delete) {
+                                    if (obj != null) {
+                                        obj.deleteFromRealm();
+                                    }
+                                } else {
+                                    if (obj == null) {
+                                        obj = new BlockUser();
+                                        obj._id = _id;
+                                    }
+
+                                    obj.ownerUserId = ppFromString(itemStr, "ownerUserId._id").getAsString();
+                                    obj.ownerUsername = ppFromString(itemStr, "ownerUserId.username").getAsString();
+                                    obj.targetUserId = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                    obj.targetUsername = ppFromString(itemStr, "targetUserId.username").getAsString();
+
+                                    // This will update an existing object with the same primary key
+                                    // or create a new object if an object with no primary key = _id
+                                    realm.copyToRealmOrUpdate(obj);
+                                }
+                            }
+
+                            //更新时间戳
+                            if (time > -1) {
+                                realm.where(RMMyProfile.class).findFirst().getNewBlocksTime = time;
+                            }
+                        }
+                    });
+
+                    ArrayList<String> relatedUserIds = new ArrayList<String>();
+
+                    for (JsonElement item : users) {
+
+                        String itemStr = item.toString();
+
+                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                        relatedUserIds.add(_id);
+                    }
+
+                    EventBus.getDefault().post(new RelatedUserChanged(relatedUserIds));
+                }
+            }
+        };
+
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+    }
+
     public static void getPush(String type) {
-        if (type.equals("get_new_friends") || type.equals("delete_friends")) {
+        Log.v("ppLog", "getPush:" + type);
+        if (type.equals("get_new_friends")) {
             getNewFriends();
-        } else if (type.equals("get_new_fans") || type.equals("delete_fans")) {
+        } else if (type.equals("get_new_fans")) {
             getNewFans();
-        } else if (type.equals("get_new_follows") || type.equals("delete_follows")) {
+        } else if (type.equals("get_new_follows")) {
             getNewFollows();
+        } else if (type.equals("get_new_blocks")) {
+            getNewBlocks();
         } else if (type.equals("profile_updated")) {
             getMyProfile();
         } else {
