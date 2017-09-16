@@ -1,17 +1,13 @@
 package com.penn.ajb3;
 
-import android.app.ActionBar;
 import android.databinding.DataBindingUtil;
-import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -23,7 +19,7 @@ import com.penn.ajb3.databinding.ClickToLoadMoreBinding;
 import com.penn.ajb3.databinding.LoadingMoreBinding;
 import com.penn.ajb3.databinding.NoMoreBinding;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
-import com.penn.ajb3.realm.RMMyProfile;
+import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
@@ -34,26 +30,22 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
-import retrofit2.HttpException;
 
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOADING_NOT_START;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_ALL;
 import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_FAILED;
-import static com.penn.ajb3.PPApplication.callFailure;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class AllUsersActivity extends AppCompatActivity {
 
-    private Set<String> objWaiting = new HashSet<String>();
+    private Set<String> objWaitingFollow = new HashSet<String>();
+    private Set<String> objWaitingBlock = new HashSet<String>();
     private ArrayList<AllUsersActivity.OtherUser> otherUsers;
     private LinearLayoutManager linearLayoutManager;
 
@@ -66,6 +58,17 @@ public class AllUsersActivity extends AppCompatActivity {
         public String sex;
         public String avatar;
         public long updateTime;
+
+        public int blockable() {
+            try (Realm realm = Realm.getDefaultInstance()) {
+                RMBlockUser blockUser = realm.where(RMBlockUser.class).equalTo("targetUserId", _id).findFirst();
+                if (blockUser != null) {
+                    return View.INVISIBLE;
+                } else {
+                    return View.VISIBLE;
+                }
+            }
+        }
 
         public int followable() {
             try (Realm realm = Realm.getDefaultInstance()) {
@@ -223,12 +226,12 @@ public class AllUsersActivity extends AppCompatActivity {
                         final String curUserId = userId;
 
                         //如果在此用户在objWaiting中, 则点击无效
-                        if (objWaiting.contains(curUserId)) {
+                        if (objWaitingFollow.contains(curUserId)) {
                             Log.v("ppLog", "稍等下, 不要重复点击");
                             return;
                         }
 
-                        objWaiting.add(curUserId);
+                        objWaitingFollow.add(curUserId);
                         int index = -1;
                         for (int i = 0; i < otherUsers.size(); i++) {
                             AllUsersActivity.OtherUser otherUser = otherUsers.get(i);
@@ -247,7 +250,59 @@ public class AllUsersActivity extends AppCompatActivity {
                         Action callFinal = new Action() {
                             @Override
                             public void run() throws Exception {
-                                objWaiting.remove(curUserId);
+                                objWaitingFollow.remove(curUserId);
+
+                                int index = -1;
+                                for (int i = 0; i < otherUsers.size(); i++) {
+                                    AllUsersActivity.OtherUser otherUser = otherUsers.get(i);
+                                    if (otherUser._id.equals(curUserId)) {
+                                        index = i;
+                                        break;
+                                    }
+                                }
+
+                                if (index > -1) {
+                                    rvAdapter.notifyItemChanged(index);
+                                }
+                            }
+                        };
+
+                        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
+                    }
+                });
+
+                binding.blockBt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //保存点击时的userId
+                        final String curUserId = userId;
+
+                        //如果在此用户在objWaiting中, 则点击无效
+                        if (objWaitingBlock.contains(curUserId)) {
+                            Log.v("ppLog", "稍等下, 不要重复点击");
+                            return;
+                        }
+
+                        objWaitingBlock.add(curUserId);
+                        int index = -1;
+                        for (int i = 0; i < otherUsers.size(); i++) {
+                            AllUsersActivity.OtherUser otherUser = otherUsers.get(i);
+                            if (otherUser._id.equals(curUserId)) {
+                                index = i;
+                                break;
+                            }
+                        }
+
+                        if (index > -1) {
+                            rvAdapter.notifyItemChanged(index);
+                        }
+
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().block(userId);
+
+                        Action callFinal = new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                objWaitingBlock.remove(curUserId);
 
                                 int index = -1;
                                 for (int i = 0; i < otherUsers.size(); i++) {
@@ -272,12 +327,20 @@ public class AllUsersActivity extends AppCompatActivity {
             public void bind(AllUsersActivity.OtherUser otherUser) {
                 binding.setData(otherUser);
                 userId = otherUser._id;
-                if (objWaiting.contains(userId)) {
+                if (objWaitingFollow.contains(userId)) {
                     Log.v("ppLog", "waiting");
-                    binding.pb.setVisibility(View.VISIBLE);
+                    binding.followPb.setVisibility(View.VISIBLE);
                 } else {
                     Log.v("ppLog", "unwaiting");
-                    binding.pb.setVisibility(View.INVISIBLE);
+                    binding.followPb.setVisibility(View.INVISIBLE);
+                }
+
+                if (objWaitingBlock.contains(userId)) {
+                    Log.v("ppLog", "waiting");
+                    binding.blockPb.setVisibility(View.VISIBLE);
+                } else {
+                    Log.v("ppLog", "unwaiting");
+                    binding.blockPb.setVisibility(View.INVISIBLE);
                 }
             }
         }

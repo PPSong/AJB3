@@ -33,6 +33,9 @@ public interface PPService {
     @POST("getNewFriends/{startTime}")
     Observable<String> getNewFriends(@Path("startTime") long startTime);
 
+    @POST("getNewBlocks/{startTime}")
+    Observable<String> getNewBlocks(@Path("startTime") long startTime);
+
     @POST("getMyProfile")
     Observable<String> getMyProfile();
 
@@ -44,6 +47,9 @@ public interface PPService {
 
     @POST("follow/{userId}")
     Observable<String> follow(@Path("userId") String userId);
+
+    @POST("block/{userId}")
+    Observable<String> block(@Path("userId") String userId);
 
     @POST("getQiniuToken")
     Observable<String> getQiniuToken();

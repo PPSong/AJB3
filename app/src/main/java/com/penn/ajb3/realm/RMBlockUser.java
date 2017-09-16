@@ -7,7 +7,7 @@ import io.realm.annotations.PrimaryKey;
  * Created by penn on 15/09/2017.
  */
 
-public class BlockUser extends RealmObject {
+public class RMBlockUser extends RealmObject {
     @PrimaryKey
     public String _id;
     public String ownerUserId;

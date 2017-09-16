@@ -22,7 +22,7 @@ import com.google.gson.JsonPrimitive;
 import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.messageEvent.UserLogout;
 import com.penn.ajb3.messageEvent.UserSignIn;
-import com.penn.ajb3.realm.BlockUser;
+import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -548,12 +548,13 @@ public class PPApplication extends Application {
         try (Realm realm = Realm.getDefaultInstance()) {
             startTime = realm.where(RMMyProfile.class).findFirst().getNewBlocksTime;
         }
-        Observable<String> result = PPRetrofit.getInstance().getPPService().getNewFriends(startTime);
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getNewBlocks(startTime);
 
         Consumer<Object> callSuccess = new Consumer<Object>() {
             @Override
             public void accept(@NonNull final Object sObj) throws Exception {
                 String s = sObj.toString();
+                Log.v("ppLog", "original s:" + s);
                 try (Realm realm = Realm.getDefaultInstance()) {
                     final JsonArray users = ppFromString(s, null).getAsJsonArray();
 
@@ -567,14 +568,20 @@ public class PPApplication extends Application {
 
                                 String itemStr = item.toString();
 
+                                Log.v("ppLog", "ppt1");
+
                                 long itemTime = ppFromString(itemStr, "updateTime").getAsLong();
                                 if (itemTime > time) {
                                     time = itemTime;
                                 }
 
+                                Log.v("ppLog", "ppt2");
+
                                 String _id = ppFromString(itemStr, "_id").getAsString();
                                 boolean delete = ppFromString(itemStr, "deleted").getAsBoolean();
-                                BlockUser obj = realm.where(BlockUser.class).equalTo("_id", _id).findFirst();
+                                RMBlockUser obj = realm.where(RMBlockUser.class).equalTo("_id", _id).findFirst();
+
+                                Log.v("ppLog", "ppt3");
 
                                 if (delete) {
                                     if (obj != null) {
@@ -582,20 +589,27 @@ public class PPApplication extends Application {
                                     }
                                 } else {
                                     if (obj == null) {
-                                        obj = new BlockUser();
+                                        obj = new RMBlockUser();
                                         obj._id = _id;
                                     }
 
+                                    Log.v("ppLog", "ppt4");
                                     obj.ownerUserId = ppFromString(itemStr, "ownerUserId._id").getAsString();
+                                    Log.v("ppLog", "ppt5");
                                     obj.ownerUsername = ppFromString(itemStr, "ownerUserId.username").getAsString();
+                                    Log.v("ppLog", "ppt6");
                                     obj.targetUserId = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                    Log.v("ppLog", "ppt7");
                                     obj.targetUsername = ppFromString(itemStr, "targetUserId.username").getAsString();
+                                    Log.v("ppLog", "ppt8");
 
                                     // This will update an existing object with the same primary key
                                     // or create a new object if an object with no primary key = _id
                                     realm.copyToRealmOrUpdate(obj);
                                 }
                             }
+
+                            Log.v("ppLog", "ppt9");
 
                             //更新时间戳
                             if (time > -1) {
@@ -694,6 +708,7 @@ public class PPApplication extends Application {
         @Override
         public void accept(@NonNull final Object s) {
             //do nothing
+            Log.v("ppLog", "callSuccess:" + s.toString());
         }
     };
 

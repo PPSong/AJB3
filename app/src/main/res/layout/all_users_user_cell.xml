@@ -23,21 +23,56 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <Button
-                android:id="@+id/follow_bt"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="关注"
-                android:visibility="@{data.followable}" />
+                android:orientation="horizontal">
 
-            <android.support.v4.widget.ContentLoadingProgressBar
-                android:id="@+id/pb"
-                style="?android:attr/android:progressBarStyleSmall"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center"
-                android:elevation="7dp"
-                android:visibility="invisible" />
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/follow_bt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="关注"
+                        android:visibility="@{data.followable}" />
+
+                    <android.support.v4.widget.ContentLoadingProgressBar
+                        android:id="@+id/follow_pb"
+                        style="?android:attr/android:progressBarStyleSmall"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:elevation="7dp"
+                        android:visibility="invisible" />
+
+                </FrameLayout>
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <Button
+                        android:id="@+id/block_bt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="屏蔽"
+                        android:visibility="@{data.blockable}" />
+
+                    <android.support.v4.widget.ContentLoadingProgressBar
+                        android:id="@+id/block_pb"
+                        style="?android:attr/android:progressBarStyleSmall"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_gravity="center"
+                        android:elevation="7dp"
+                        android:visibility="invisible" />
+
+                </FrameLayout>
+
+            </LinearLayout>
 
         </FrameLayout>
 
