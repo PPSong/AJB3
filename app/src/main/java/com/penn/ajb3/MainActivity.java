@@ -3,6 +3,7 @@ package com.penn.ajb3;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -25,8 +26,10 @@ import android.widget.TextView;
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.penn.ajb3.databinding.ActivityMainBinding;
+import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
+import com.penn.ajb3.util.PPService;
 import com.penn.ajb3.util.SocketService;
 
 import org.json.JSONException;
@@ -35,6 +38,8 @@ import org.json.JSONObject;
 import java.net.Socket;
 import java.net.URISyntaxException;
 
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
@@ -56,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     private com.github.nkzawa.socketio.client.Socket socket;
 
     private RealmResults<RMRelatedUser> relatedUsers;
+
+    private String test;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -111,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        Log.v("ppLog", "onDestroy");
+        Log.v("ppLog", "main onDestroy");
         realm.close();
         super.onDestroy();
     }
@@ -150,6 +157,27 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         } else if (id == R.id.action_logout) {
+            //下面是async http testing
+//            Observable<String> result = PPRetrofit.getInstance().getPPService().test();
+//
+//            Consumer<Object> callSuccess = new Consumer<Object>() {
+//                @Override
+//                public void accept(@NonNull final Object sObj) throws Exception {
+//                    binding.relatedUserCount.setText("main pp test ok");
+//                    try(Realm realm = Realm.getDefaultInstance()) {
+//                        RMMyProfile rmMyProfile = realm.where(RMMyProfile.class).findFirst();
+//                        Log.v("ppLog", "main rmMyProfile:" + rmMyProfile.nickname);
+//                    } catch (Exception e) {
+//                        Log.v("ppLog", "main exception:" + e.toString());
+//                    }
+//                    Log.v("ppLog", "main pp test ok");
+//                }
+//            };
+//
+//            PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+//
+//            PPRetrofit.cancelAll();
+
             PPApplication.logout();
 
             return true;
@@ -213,6 +241,8 @@ public class MainActivity extends AppCompatActivity {
                 return FansFragment.newInstance(null, null);
             } else if (position == 2) {
                 return FriendsFragment.newInstance(null, null);
+            } else if (position == 3) {
+                return BlocksFragment.newInstance(null, null);
             } else {
                 return PlaceholderFragment.newInstance(position + 1);
             }
@@ -221,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 4;
         }
 
         @Override
@@ -233,6 +263,8 @@ public class MainActivity extends AppCompatActivity {
                     return "FANS";
                 case 2:
                     return "FRIENDS";
+                case 3:
+                    return "BLOCKS";
             }
             return null;
         }
