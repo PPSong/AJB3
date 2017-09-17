@@ -60,6 +60,12 @@ public interface PPService {
     @POST("updateAvatar/{avatarImageName}")
     Observable<String> updateAvatar(@Path("avatarImageName") String avatarImageName);
 
+    @POST("getMessage/{lnt}/{lat}/{startTime}")
+    Observable<String> getMessage(@Path("lnt") String lnt, @Path("lat") String lat, @Path("startTime") long startTime);
+
+    @POST("sendMessage/{id}/{body}/{createTime}/{lnt}/{lat}")
+    Observable<String> sendMessage(@Path("id") String id, @Path("body") String body, @Path("createTime") long createTime, @Path("lnt") String lnt, @Path("lat") String lat);
+
     @POST("test")
     Observable<String> test();
 }
