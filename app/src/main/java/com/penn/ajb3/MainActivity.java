@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             PPApplication.showDB();
             return true;
         } else if (id == R.id.action_test) {
-            Intent intent = new Intent(this, PhotoActivity.class);
+            Intent intent = new Intent(this, ChatActivity.class);
             startActivity(intent);
 
             return true;

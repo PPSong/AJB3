@@ -204,6 +204,8 @@ public class FansFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        //removeAllChangeListeners, 防止多次触发
+        data.removeAllChangeListeners();
         realm.close();
         super.onDestroyView();
     }

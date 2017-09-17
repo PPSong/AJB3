@@ -19,13 +19,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PPRetrofit {
     private static PPRetrofit instance = null;
-    public static final String BASE = "http://10.0.13.238";
+//    public static final String BASE = "http://10.0.2.144";
 //    public static final String BASE = "http://192.168.100.100";
-//    public static final String BASE = "http://192.168.100.103";
+    public static final String BASE = "http://192.168.100.106";
     public static final String BASE_URL = BASE + ":3000/";
     public static final String SOCKET_URL = BASE + ":3001";
 
     private PPService ppService;
+
+    private static OkHttpClient client;
 
     public static PPRetrofit getInstance() {
         if (instance == null) {
@@ -33,6 +35,10 @@ public class PPRetrofit {
         }
 
         return instance;
+    }
+
+    public static void cancelAll() {
+        client.dispatcher().cancelAll();
     }
 
     private PPRetrofit() {
@@ -48,7 +54,7 @@ public class PPRetrofit {
             }
         });
 
-        OkHttpClient client = builder.build();
+        client = builder.build();
 
         Retrofit retrofit = new Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())

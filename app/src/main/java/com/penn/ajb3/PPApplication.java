@@ -862,5 +862,8 @@ public class PPApplication extends Application {
         });
     }
 
-
+    public static String[] getCurGeo() {
+        //todo replace fake geo
+        return new String[]{"121.0", "31.0"};
+    }
 }

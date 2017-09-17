@@ -51,9 +51,15 @@ public interface PPService {
     @POST("block/{userId}")
     Observable<String> block(@Path("userId") String userId);
 
+    @POST("unBlock/{userId}")
+    Observable<String> unBlock(@Path("userId") String userId);
+
     @POST("getQiniuToken")
     Observable<String> getQiniuToken();
 
     @POST("updateAvatar/{avatarImageName}")
     Observable<String> updateAvatar(@Path("avatarImageName") String avatarImageName);
+
+    @POST("test")
+    Observable<String> test();
 }

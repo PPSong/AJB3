@@ -6,7 +6,7 @@
 
         <variable
             name="data"
-            type="com.penn.ajb3.realm.RMRelatedUser" />
+            type="com.penn.ajb3.realm.RMBlockUser" />
     </data>
 
     <LinearLayout
@@ -14,33 +14,20 @@
         android:layout_height="80dp"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/avatar_iv"
-            avatar_image_name="@{data.avatar}"
-            android:layout_width="48dp"
-            android:layout_height="48dp" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@{data._id}" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@{data.followState}" />
+            android:text="@{data.targetUsername}" />
 
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
             <Button
-                android:id="@+id/un_follow_bt"
+                android:id="@+id/follow_bt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@android:color/white"
-                android:text="取消关注"
-                android:visibility="@{data.unFollowable}" />
+                android:text="解禁" />
 
             <android.support.v4.widget.ContentLoadingProgressBar
                 android:id="@+id/pb"
@@ -52,6 +39,7 @@
                 android:visibility="invisible" />
 
         </FrameLayout>
+
 
     </LinearLayout>
 

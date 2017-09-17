@@ -56,7 +56,12 @@
         </receiver>
 
         <activity android:name=".PhotoActivity" />
-        <activity android:name=".MeActivity"></activity>
+        <activity android:name=".MeActivity" />
+        <activity
+            android:name=".ChatActivity"
+            android:windowSoftInputMode="adjustResize">
+
+        </activity>
     </application>
 
 </manifest>

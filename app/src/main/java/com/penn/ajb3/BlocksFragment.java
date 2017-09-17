@@ -4,7 +4,6 @@ import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,41 +12,33 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.gson.JsonArray;
-import com.penn.ajb3.databinding.FollowsUserCellBinding;
-import com.penn.ajb3.databinding.FragmentFollowsBinding;
+import com.penn.ajb3.databinding.BlocksUserCellBinding;
+import com.penn.ajb3.databinding.FragmentBlocksBinding;
+import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
-import com.squareup.picasso.Picasso;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
-import io.reactivex.schedulers.Schedulers;
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
-import retrofit2.HttpException;
-
-import static com.penn.ajb3.PPApplication.ppFromString;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link FollowsFragment.OnFragmentInteractionListener} interface
+ * {@link BlocksFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link FollowsFragment#newInstance} factory method to
+ * Use the {@link BlocksFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FollowsFragment extends Fragment {
+public class BlocksFragment extends Fragment {
     private Set<String> objWaiting = new HashSet<String>();
 
     public class RelatedUserListAdapter extends RecyclerView.Adapter<RelatedUserListAdapter.RelatedUserVH> {
@@ -56,9 +47,9 @@ public class FollowsFragment extends Fragment {
         public RelatedUserVH onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
 
-            FollowsUserCellBinding followsUserCellBinding = FollowsUserCellBinding.inflate(layoutInflater, parent, false);
+            BlocksUserCellBinding blocksUserCellBinding = BlocksUserCellBinding.inflate(layoutInflater, parent, false);
 
-            return new RelatedUserVH(followsUserCellBinding);
+            return new RelatedUserVH(blocksUserCellBinding);
         }
 
         @Override
@@ -72,20 +63,14 @@ public class FollowsFragment extends Fragment {
         }
 
         public class RelatedUserVH extends RecyclerView.ViewHolder {
-            private FollowsUserCellBinding binding;
+            private BlocksUserCellBinding binding;
             private String userId;
 
-            public RelatedUserVH(FollowsUserCellBinding binding) {
+            public RelatedUserVH(BlocksUserCellBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
 
-                Picasso.with(getContext())
-                        .load("https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo/bd_logo1_31bdc765.png")
-                        .placeholder(android.R.drawable.ic_menu_myplaces)
-                        .error(android.R.drawable.stat_notify_error)
-                        .into(binding.avatarIv);
-
-                binding.unFollowBt.setOnClickListener(new View.OnClickListener() {
+                binding.followBt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         //保存点击时的userId
@@ -100,8 +85,8 @@ public class FollowsFragment extends Fragment {
                         objWaiting.add(curUserId);
                         int index = -1;
                         for (int i = 0; i < data.size(); i++) {
-                            RMRelatedUser rmRelatedUser = data.get(i);
-                            if (rmRelatedUser.get_id().equals(curUserId)) {
+                            RMBlockUser rmBlockUser = data.get(i);
+                            if (rmBlockUser._id.equals(curUserId)) {
                                 index = i;
                                 break;
                             }
@@ -111,7 +96,7 @@ public class FollowsFragment extends Fragment {
                             rvAdapter.notifyItemChanged(index);
                         }
 
-                        Observable<String> result = PPRetrofit.getInstance().getPPService().unFollow(curUserId);
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().unBlock(curUserId);
 
                         Action callFinal = new Action() {
                             @Override
@@ -120,8 +105,8 @@ public class FollowsFragment extends Fragment {
 
                                 int index = -1;
                                 for (int i = 0; i < data.size(); i++) {
-                                    RMRelatedUser rmRelatedUser = data.get(i);
-                                    if (rmRelatedUser.get_id().equals(curUserId)) {
+                                    RMBlockUser rmBlockUser = data.get(i);
+                                    if (rmBlockUser._id.equals(curUserId)) {
                                         index = i;
                                         break;
                                     }
@@ -138,12 +123,12 @@ public class FollowsFragment extends Fragment {
                 });
             }
 
-            public void bind(RMRelatedUser rmRelatedUser) {
+            public void bind(RMBlockUser rmBlockUser) {
                 Log.v("ppLog", "bind");
                 //一定要加下面这句, 把记录从realm中copy出来成为unmanaged object, 以防止在setData过程中原来的记录被删除而导致程序崩溃
-                RMRelatedUser tmp = realm.copyFromRealm(rmRelatedUser);
+                RMBlockUser tmp = realm.copyFromRealm(rmBlockUser);
                 binding.setData(tmp);
-                userId = tmp._id;
+                userId = tmp.targetUserId;
                 if (objWaiting.contains(userId)) {
                     Log.v("ppLog", "waiting");
                     binding.pb.setVisibility(View.VISIBLE);
@@ -156,9 +141,9 @@ public class FollowsFragment extends Fragment {
     }
 
     private Realm realm;
-    private RealmResults<RMRelatedUser> data;
+    private RealmResults<RMBlockUser> data;
     private RelatedUserListAdapter rvAdapter;
-    private FragmentFollowsBinding binding;
+    private FragmentBlocksBinding binding;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -171,7 +156,7 @@ public class FollowsFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    public FollowsFragment() {
+    public BlocksFragment() {
         // Required empty public constructor
     }
 
@@ -181,11 +166,11 @@ public class FollowsFragment extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment FollowsFragment.
+     * @return A new instance of fragment BlocksFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FollowsFragment newInstance(String param1, String param2) {
-        FollowsFragment fragment = new FollowsFragment();
+    public static BlocksFragment newInstance(String param1, String param2) {
+        BlocksFragment fragment = new BlocksFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -195,7 +180,6 @@ public class FollowsFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.v("ppLog", "follow onCreate");
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -206,8 +190,7 @@ public class FollowsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.v("ppLog", "follow onCreateView");
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_follows, container, false);
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_blocks, container, false);
         View view = binding.getRoot();
 
         setup();
@@ -225,14 +208,12 @@ public class FollowsFragment extends Fragment {
 
     private void setup() {
         realm = Realm.getDefaultInstance();
-        data = realm.where(RMRelatedUser.class).equalTo("isFollows", true).findAllSorted("updateTime", Sort.DESCENDING);
+        data = realm.where(RMBlockUser.class).equalTo("ownerUserId", PPApplication.getPrefStringValue(PPApplication.MY_ID, "")).findAllSorted("targetUsername", Sort.DESCENDING);
 
-        data.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMRelatedUser>>() {
+        data.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMBlockUser>>() {
             @Override
-            public void onChange(RealmResults<RMRelatedUser> rmRelatedUsers, OrderedCollectionChangeSet changeSet) {
-                Log.v("ppLog", "addChangeListener");
+            public void onChange(RealmResults<RMBlockUser> rmRelatedUsers, OrderedCollectionChangeSet changeSet) {
 //                rvAdapter.notifyDataSetChanged();
-                // `null`  means the async query returns the first time.
                 if (changeSet == null) {
                     rvAdapter.notifyDataSetChanged();
                     return;
