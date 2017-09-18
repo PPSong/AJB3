@@ -206,7 +206,7 @@ public class FollowsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.v("ppLog", "follow onCreateView");
+        Log.v("ppLog", "follow onCreateView:" + objWaiting.size());
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_follows, container, false);
         View view = binding.getRoot();
 
@@ -217,6 +217,7 @@ public class FollowsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        Log.v("ppLog", "onDestroyView follows");
         //removeAllChangeListeners, 防止多次触发
         data.removeAllChangeListeners();
         realm.close();
