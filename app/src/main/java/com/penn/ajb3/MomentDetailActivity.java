@@ -6,9 +6,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -52,6 +54,7 @@ public class MomentDetailActivity extends AppCompatActivity {
 
     public class Comment {
         public String _id;
+        public String momentId;
         public String userId;
         public String nickname;
         public String avatar;
@@ -77,6 +80,8 @@ public class MomentDetailActivity extends AppCompatActivity {
     }
 
     private void setup() {
+        binding.deleteBt.setVisibility(View.INVISIBLE);
+
         comments = new ArrayList();
         rvAdapter = new CommentListAdapter();
         linearLayoutManager = new LinearLayoutManager(this);
@@ -86,11 +91,61 @@ public class MomentDetailActivity extends AppCompatActivity {
 
         momentId = getIntent().getStringExtra("momentId");
 
+        PPApplication.setupUI(this, binding.getRoot());
+
         //get Moment
         getMoment();
 
         //get Comment
         getComment();
+
+        binding.deleteBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //todo 删除moment后, nearMoment中此条记录要清除么?
+            }
+        });
+
+        binding.sendBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                binding.commentInputEt.clearFocus();
+
+                //插入本地data
+                long now = System.currentTimeMillis();
+                String body = binding.commentInputEt.getText().toString();
+
+                if (TextUtils.isEmpty(body)) {
+                    return;
+                }
+
+                Comment obj = new Comment();
+                obj._id = PPApplication.uuid + "_" + System.currentTimeMillis();
+                obj.momentId = momentId;
+                obj.userId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "");
+                obj.nickname = PPApplication.getPrefStringValue(PPApplication.NICKNAME, "");
+                obj.avatar = PPApplication.getPrefStringValue(PPApplication.AVATAR, "");
+                obj.body = body;
+                obj.createTime = now;
+
+                comments.add(obj);
+
+                //todo 改进成自动滚动到最后一条, 看着记录被添加
+//                rvAdapter.notifyItemInserted(comments.size() - 1);
+                rvAdapter.notifyDataSetChanged();
+
+                binding.mainRv.scrollToPosition(comments.size() - 1);
+
+                //清空输入框
+                binding.commentInputEt.setText("");
+
+                //发送comment到服务器
+                Observable<String> result = PPRetrofit.getInstance().getPPService().sendComment(obj._id, obj.momentId, obj.body, obj.createTime);
+
+                PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, null);
+            }
+        });
     }
 
     private void getMoment() {
@@ -169,15 +224,38 @@ public class MomentDetailActivity extends AppCompatActivity {
 
         public class CommentVH extends RecyclerView.ViewHolder {
             private CommentCellBinding binding;
+            private String commentId;
 
             public CommentVH(CommentCellBinding binding) {
                 super(binding.getRoot());
                 this.binding = binding;
+
+                binding.deleteBt.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        final String curCommentId = commentId;
+                        deleteComment(curCommentId);
+                    }
+                });
             }
 
             private void bind(Comment comment) {
                 binding.setData(comment);
+                commentId = comment._id;
             }
         }
+    }
+
+    private void deleteComment(String commentId) {
+        Observable<String> result = PPRetrofit.getInstance().getPPService().deleteComment(commentId);
+
+        for (int i = 0; i < comments.size(); i++) {
+            if (comments.get(i)._id.equals(commentId)) {
+                comments.remove(i);
+                rvAdapter.notifyItemRemoved(i);
+            }
+        }
+
+        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, null);
     }
 }

@@ -72,8 +72,14 @@ public interface PPService {
     @POST("getMomentDetail/{momentId}")
     Observable<String> getMomentDetail(@Path("momentId") String momentId);
 
+    @POST("sendComment/{id}/{momentId}/{body}/{createTime}")
+    Observable<String> sendComment(@Path("id") String id, @Path("momentId") String momentId, @Path("body") String body, @Path("createTime") long createTime);
+
     @POST("getComments/{momentId}")
     Observable<String> getComments(@Path("momentId") String momentId);
+
+    @POST("deleteComment/{momentId}")
+    Observable<String> deleteComment(@Path("momentId") String momentId);
 
     @POST("test")
     Observable<String> test();

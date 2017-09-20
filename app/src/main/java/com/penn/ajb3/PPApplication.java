@@ -11,6 +11,11 @@ import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -81,6 +86,8 @@ public class PPApplication extends Application {
     public static final String AUTH_BODY = "AUTH_BODY";
     public static final String MY_ID = "MY_ID";
     public static final String USERNAME = "USERNAME";
+    public static final String NICKNAME = "NICKNAME";
+    public static final String AVATAR = "AVATAR";
 
     private static Configuration config = new Configuration.Builder()
             .zone(FixedZone.zone0)
@@ -676,6 +683,8 @@ public class PPApplication extends Application {
         removePrefItem(MY_ID);
         removePrefItem(AUTH_BODY);
         removePrefItem(USERNAME);
+        removePrefItem(NICKNAME);
+        removePrefItem(AVATAR);
 
         Intent errorActivity = new Intent("com.error.activity");//this has to match your intent filter
         errorActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -865,5 +874,38 @@ public class PPApplication extends Application {
     public static String[] getCurGeo() {
         //todo replace fake geo
         return new String[]{"121.0", "31.0"};
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
+    }
+
+    public static void setupUI(final Activity activity, final View view) {
+
+        // Set up touch listener for non-text box views to hide keyboard.
+        if (!(view instanceof EditText)) {
+            view.setFocusable(true);
+            view.setOnTouchListener(new View.OnTouchListener() {
+                public boolean onTouch(View v, MotionEvent event) {
+                    hideSoftKeyboard(activity);
+
+                    view.requestFocus();
+
+                    return false;
+                }
+            });
+        }
+
+        //If a layout container, iterate over children and seed recursion.
+        if (view instanceof ViewGroup) {
+            for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
+                View innerView = ((ViewGroup) view).getChildAt(i);
+                setupUI(activity, innerView);
+            }
+        }
     }
 }
