@@ -1,6 +1,7 @@
 package com.penn.ajb3;
 
 import android.content.Context;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
@@ -180,7 +181,7 @@ public class NearMomentsFragment extends Fragment {
 
         public class NearMomentVH extends RecyclerView.ViewHolder {
             private NearMomentCellBinding binding;
-            private String userId;
+            private String momentId;
 
             public NearMomentVH(NearMomentCellBinding binding) {
                 super(binding.getRoot());
@@ -191,6 +192,19 @@ public class NearMomentsFragment extends Fragment {
                         .placeholder(android.R.drawable.ic_menu_myplaces)
                         .error(android.R.drawable.stat_notify_error)
                         .into(binding.avatarIv);
+
+                binding.mainIv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //保存点击时的userId
+                        final String curMomentId = momentId;
+
+                        Intent intent = new Intent(getContext(), MomentDetailActivity.class);
+                        intent.putExtra("momentId", curMomentId);
+
+                        getContext().startActivity(intent);
+                    }
+                });
             }
 
             public void bind(RMNearMoment rmNearMoment) {
@@ -198,7 +212,7 @@ public class NearMomentsFragment extends Fragment {
                 //一定要加下面这句, 把记录从realm中copy出来成为unmanaged object, 以防止在setData过程中原来的记录被删除而导致程序崩溃
                 RMNearMoment tmp = realm.copyFromRealm(rmNearMoment);
                 binding.setData(tmp);
-                userId = tmp._id;
+                momentId = tmp._id;
             }
         }
     }
@@ -368,8 +382,8 @@ public class NearMomentsFragment extends Fragment {
     }
 
     private void getMoment() {
-        String lnt =  PPApplication.getPrefStringValue("nearLnt", "121");
-        String lat =  PPApplication.getPrefStringValue("nearLat", "31");
+        String lnt = PPApplication.getPrefStringValue("nearLnt", "121");
+        String lat = PPApplication.getPrefStringValue("nearLat", "31");
         Observable<String> result = PPRetrofit.getInstance().getPPService().getMoment(lnt, lat, startTime);
 
         Consumer<Object> callSuccess = new Consumer<Object>() {

@@ -59,9 +59,8 @@
         <activity android:name=".MeActivity" />
         <activity
             android:name=".ChatActivity"
-            android:windowSoftInputMode="adjustResize">
-
-        </activity>
+            android:windowSoftInputMode="adjustResize"></activity>
+        <activity android:name=".MomentDetailActivity"></activity>
     </application>
 
 </manifest>
