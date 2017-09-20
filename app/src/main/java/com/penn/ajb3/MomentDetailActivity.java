@@ -161,6 +161,8 @@ public class MomentDetailActivity extends AppCompatActivity {
                 obj.userId = ppFromString(s, "userId._id").getAsString();
                 obj.nickname = ppFromString(s, "userId.nickname").getAsString();
                 obj.avatar = ppFromString(s, "userId.avatar").getAsString();
+                //如本地数据库有这个用户, 顺便更新ta的头像
+                PPApplication.updateAvatar(obj.userId, obj.avatar);
                 obj.body = ppFromString(s, "body").getAsString();
                 obj.image = ppFromString(s, "image").getAsString();
                 obj.createTime = ppFromString(s, "createTime").getAsLong();
@@ -190,6 +192,8 @@ public class MomentDetailActivity extends AppCompatActivity {
                     obj.userId = ppFromString(itemStr, "userId._id").getAsString();
                     obj.nickname = ppFromString(itemStr, "userId.nickname").getAsString();
                     obj.avatar = ppFromString(itemStr, "userId.avatar").getAsString();
+                    //如本地数据库有这个用户, 顺便更新ta的头像
+                    PPApplication.updateAvatar(obj.userId, obj.avatar);
                     obj.createTime = ppFromString(itemStr, "createTime").getAsLong();
 
                     comments.add(obj);

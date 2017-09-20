@@ -908,4 +908,19 @@ public class PPApplication extends Application {
             }
         }
     }
+
+    public static void updateAvatar(final String userId, final String avatar) {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    RMRelatedUser obj = realm.where(RMRelatedUser.class).equalTo("_id", userId).findFirst();
+
+                    if (obj != null) {
+                        obj.avatar = avatar;
+                    }
+                }
+            });
+        }
+    }
 }
