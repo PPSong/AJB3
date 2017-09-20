@@ -66,6 +66,9 @@ public interface PPService {
     @POST("sendMessage/{id}/{body}/{createTime}/{lnt}/{lat}")
     Observable<String> sendMessage(@Path("id") String id, @Path("body") String body, @Path("createTime") long createTime, @Path("lnt") String lnt, @Path("lat") String lat);
 
+    @POST("getMoment/{lnt}/{lat}/{startTime}")
+    Observable<String> getMoment(@Path("lnt") String lnt, @Path("lat") String lat, @Path("startTime") long startTime);
+
     @POST("test")
     Observable<String> test();
 }

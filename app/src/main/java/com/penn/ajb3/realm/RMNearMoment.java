@@ -14,5 +14,6 @@ public class RMNearMoment extends RealmObject {
     public String nickname;
     public String avatar;
     public String body;
+    public String image;
     public long createTime;
 }
