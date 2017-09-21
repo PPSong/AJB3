@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -185,17 +186,25 @@ public class MomentDetailActivity extends AppCompatActivity {
                 for (JsonElement item : commentsArr) {
 
                     String itemStr = item.toString();
+                    Log.v("ppLog", "itemStr:" + itemStr);
 
                     final Comment obj = new Comment();
+                    Log.v("ppLog", "t1");
                     obj._id = ppFromString(itemStr, "_id").getAsString();
+                    Log.v("ppLog", "t2");
                     obj.body = ppFromString(itemStr, "body").getAsString();
+                    Log.v("ppLog", "t3");
                     obj.userId = ppFromString(itemStr, "userId._id").getAsString();
+                    Log.v("ppLog", "t4");
                     obj.nickname = ppFromString(itemStr, "userId.nickname").getAsString();
+                    Log.v("ppLog", "t5");
                     obj.avatar = ppFromString(itemStr, "userId.avatar").getAsString();
                     //如本地数据库有这个用户, 顺便更新ta的头像
                     PPApplication.updateAvatar(obj.userId, obj.avatar);
+                    Log.v("ppLog", "t6");
                     obj.createTime = ppFromString(itemStr, "createTime").getAsLong();
 
+                    Log.v("ppLog", "t7");
                     comments.add(obj);
                 }
 

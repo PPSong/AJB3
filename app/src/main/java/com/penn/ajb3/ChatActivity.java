@@ -36,6 +36,8 @@ import static com.penn.ajb3.AllUsersActivity.RelatedUserListAdapter.LOAD_FAILED;
 import static com.penn.ajb3.PPApplication.ppFromString;
 
 public class ChatActivity extends AppCompatActivity {
+    //Declare the timer
+    private Timer t = new Timer();
     private long startTime;
 
     public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -175,8 +177,7 @@ public class ChatActivity extends AppCompatActivity {
         });
 
         // 再每隔一秒获取一次
-        //Declare the timer
-        Timer t = new Timer();
+
         //Set the schedule function and rate
         t.scheduleAtFixedRate(new TimerTask() {
                                   @Override
@@ -193,6 +194,7 @@ public class ChatActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        t.cancel();
         realm.close();
         super.onDestroy();
     }
