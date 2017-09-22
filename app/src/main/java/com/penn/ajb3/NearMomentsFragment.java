@@ -61,6 +61,8 @@ import static com.penn.ajb3.PPApplication.ppFromString;
  */
 public class NearMomentsFragment extends Fragment {
 
+    private boolean destroyed;
+
     private static final int pageSize = 10;
 
     private long startTime;
@@ -268,6 +270,8 @@ public class NearMomentsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        destroyed = false;
+
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_near_moments, container, false);
         View view = binding.getRoot();
 
@@ -278,6 +282,7 @@ public class NearMomentsFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        destroyed = true;
         Log.v("ppLog", "onDestroyView follows");
         //removeAllChangeListeners, 防止多次触发
         data.removeAllChangeListeners();
@@ -439,6 +444,10 @@ public class NearMomentsFragment extends Fragment {
         PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
             @Override
             public void needToDo() {
+                //一点要判断当前activity是否销毁, 否则在系统自动kill当前Activity的时候会报null exception崩溃
+                if (destroyed) {
+                    return;
+                }
                 rvAdapter.loadingStatus = LOAD_FAILED;
                 rvAdapter.notifyItemRemoved(data.size());
                 rvAdapter.notifyItemInserted(data.size());

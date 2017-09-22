@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.v("ppLog", "onCreate");
+        Log.v("ppLog", "MainActivity onCreate");
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             Log.v("ppLog", "savedInstanceState not null");

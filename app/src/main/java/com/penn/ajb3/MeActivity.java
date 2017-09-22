@@ -58,6 +58,7 @@ public class MeActivity extends TakePhotoActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("ppLog", "MeActivity onCreate");
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_me);
 

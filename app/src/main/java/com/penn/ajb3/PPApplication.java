@@ -670,6 +670,7 @@ public class PPApplication extends Application {
 
     @Override
     public void onCreate() {
+        Log.v("ppLog", "Application onCreate");
         super.onCreate();
         appContext = this;
 
