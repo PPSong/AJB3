@@ -256,6 +256,8 @@ public class MainActivity extends AppCompatActivity {
                 return BlocksFragment.newInstance(null, null);
             } else if (position == 4) {
                 return NearMomentsFragment.newInstance(null, null);
+            } else if (position == 5) {
+                return MyMomentsFragment.newInstance(null, null);
             } else {
                 return PlaceholderFragment.newInstance(position + 1);
             }
@@ -263,8 +265,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
-            return 5;
+            return 6;
         }
 
         @Override
@@ -280,6 +281,8 @@ public class MainActivity extends AppCompatActivity {
                     return "BLOCKS";
                 case 4:
                     return "NEAR";
+                case 5:
+                    return "MY";
             }
             return null;
         }

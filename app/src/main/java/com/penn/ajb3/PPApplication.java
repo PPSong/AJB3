@@ -28,6 +28,7 @@ import com.penn.ajb3.messageEvent.RelatedUserChanged;
 import com.penn.ajb3.messageEvent.UserLogout;
 import com.penn.ajb3.messageEvent.UserSignIn;
 import com.penn.ajb3.realm.RMBlockUser;
+import com.penn.ajb3.realm.RMMyMoment;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMNearMoment;
 import com.penn.ajb3.realm.RMRelatedUser;
@@ -724,6 +725,12 @@ public class PPApplication extends Application {
 
                     if (obj != null) {
                         obj.like = like;
+                    }
+
+                    RMMyMoment obj2 = realm.where(RMMyMoment.class).equalTo("_id", momentId).findFirst();
+
+                    if (obj2 != null) {
+                        obj2.like = like;
                     }
                 }
             });

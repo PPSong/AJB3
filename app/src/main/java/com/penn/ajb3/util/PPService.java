@@ -73,6 +73,9 @@ public interface PPService {
     @POST("getMoment/{lnt}/{lat}/{startTime}")
     Observable<String> getMoment(@Path("lnt") String lnt, @Path("lat") String lat, @Path("startTime") long startTime);
 
+    @POST("getMyMoment/{startTime}")
+    Observable<String> getMyMoment(@Path("startTime") long startTime);
+
     @POST("getMomentDetail/{momentId}")
     Observable<String> getMomentDetail(@Path("momentId") String momentId);
 

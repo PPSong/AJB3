@@ -1,0 +1,26 @@
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.penn.ajb3.MyMomentsFragment">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/main_rv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </android.support.v7.widget.RecyclerView>
+
+        <Button
+            android:elevation="30dp"
+            android:text="刷新"
+            android:id="@+id/refresh_bt"
+            android:layout_gravity="left|bottom"
+            android:layout_width="80dp"
+            android:layout_height="40dp" />
+
+    </FrameLayout>
+
+</layout>
