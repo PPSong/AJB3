@@ -53,7 +53,6 @@ public class AllUsersActivity extends AppCompatActivity {
 
     public class OtherUser {
         public String _id;
-        public String username;
         public String nickname;
         public String sex;
         public String avatar;
@@ -297,7 +296,10 @@ public class AllUsersActivity extends AppCompatActivity {
                             rvAdapter.notifyItemChanged(index);
                         }
 
-                        Observable<String> result = PPRetrofit.getInstance().getPPService().block(userId);
+                        JsonArray userIds = new JsonArray();
+                        userIds.add(userId);
+
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().block(userIds.toString());
 
                         Action callFinal = new Action() {
                             @Override
@@ -390,7 +392,7 @@ public class AllUsersActivity extends AppCompatActivity {
         loadMore("0");
     }
 
-    private void loadMore(final String fromUsername) {
+    private void loadMore(final String fromUserId) {
         if (rvAdapter.loadingStatus != LOADING_NOT_START) {
             rvAdapter.notifyItemRemoved(otherUsers.size());
         }
@@ -400,18 +402,18 @@ public class AllUsersActivity extends AppCompatActivity {
 
         binding.mainRv.scrollToPosition(otherUsers.size());
 
-        String username;
-        if (fromUsername != null) {
-            username = fromUsername;
+        String userId;
+        if (fromUserId != null) {
+            userId = fromUserId;
         } else {
             if (otherUsers.size() > 0) {
-                username = otherUsers.get(otherUsers.size() - 1).username;
+                userId = otherUsers.get(otherUsers.size() - 1)._id;
             } else {
-                username = "0";
+                userId = "0";
             }
         }
 
-        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers(username);
+        Observable<String> result = PPRetrofit.getInstance().getPPService().getOtherUsers(userId);
 
         Consumer<Object> callSuccess = new Consumer<Object>() {
             @Override
@@ -426,7 +428,6 @@ public class AllUsersActivity extends AppCompatActivity {
 
                     final OtherUser obj = new OtherUser();
                     obj._id = ppFromString(itemStr, "_id").getAsString();
-                    obj.username = ppFromString(itemStr, "username").getAsString();
                     obj.nickname = ppFromString(itemStr, "nickname").getAsString();
                     obj.sex = ppFromString(itemStr, "sex").getAsString();
                     obj.avatar = ppFromString(itemStr, "avatar").getAsString();
@@ -469,7 +470,7 @@ public class AllUsersActivity extends AppCompatActivity {
                 //屏幕滚动到新加载的第一条
                 binding.mainRv.scrollToPosition(startPosition);
 
-                if (fromUsername != null) {
+                if (fromUserId != null) {
                     //说明是setup中调用
                     binding.mainPbView.setVisibility(View.INVISIBLE);
                 }
@@ -479,7 +480,7 @@ public class AllUsersActivity extends AppCompatActivity {
         PPApplication.DoOnCallFailure doOnCallFailure = new PPApplication.DoOnCallFailure() {
             @Override
             public void needToDo() {
-                if (fromUsername != null) {
+                if (fromUserId != null) {
                     //说明是setup中调用
                     binding.mainPbView.setVisibility(View.INVISIBLE);
                 }

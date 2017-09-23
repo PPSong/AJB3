@@ -116,7 +116,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-        if (!(PPApplication.getPrefStringValue(PPApplication.USERNAME, "NONE").equals("NONE"))) {
+        if (!(PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE").equals("NONE"))) {
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         }
@@ -219,15 +219,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     Log.v("ppLog", s);
                     Log.v("ppLog", PPApplication.ppFromString(s, "token").getAsString());
                     PPApplication.setPrefStringValue(PPApplication.AUTH_BODY, PPApplication.ppFromString(s, "token").getAsString());
-                    PPApplication.setPrefStringValue(PPApplication.MY_ID, PPApplication.ppFromString(s, "_id").getAsString());
-                    String username = PPApplication.ppFromString(s, "username").getAsString();
-                    PPApplication.setPrefStringValue(PPApplication.USERNAME, username);
+                    String myId = PPApplication.ppFromString(s, "_id").getAsString();
+                    PPApplication.setPrefStringValue(PPApplication.MY_ID, myId);
                     String nickname = PPApplication.ppFromString(s, "nickname").getAsString();
                     PPApplication.setPrefStringValue(PPApplication.NICKNAME, nickname);
                     String avatar = PPApplication.ppFromString(s, "avatar").getAsString();
                     PPApplication.setPrefStringValue(PPApplication.AVATAR, avatar);
                     EventBus.getDefault().post(new UserSignIn());
-                    PPApplication.initLocalData(username);
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                 }

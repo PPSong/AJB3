@@ -85,7 +85,6 @@ public class PPApplication extends Application {
     //preference keys
     public static final String AUTH_BODY = "AUTH_BODY";
     public static final String MY_ID = "MY_ID";
-    public static final String USERNAME = "USERNAME";
     public static final String NICKNAME = "NICKNAME";
     public static final String AVATAR = "AVATAR";
 
@@ -243,7 +242,6 @@ public class PPApplication extends Application {
                                 obj = new RMMyProfile();
                                 obj._id = ppFromString(itemStr, "_id").getAsString();
                             }
-                            obj.username = ppFromString(itemStr, "username").getAsString();
                             obj.nickname = ppFromString(itemStr, "nickname").getAsString();
                             obj.sex = ppFromString(itemStr, "sex").getAsString();
                             obj.avatar = ppFromString(itemStr, "avatar").getAsString();
@@ -284,7 +282,6 @@ public class PPApplication extends Application {
                                 obj = new RMMyProfile();
                                 obj._id = ppFromString(itemStr, "_id").getAsString();
                             }
-                            obj.username = ppFromString(itemStr, "username").getAsString();
                             obj.nickname = ppFromString(itemStr, "nickname").getAsString();
                             obj.sex = ppFromString(itemStr, "sex").getAsString();
                             obj.avatar = ppFromString(itemStr, "avatar").getAsString();
@@ -348,7 +345,6 @@ public class PPApplication extends Application {
                                         obj = new RMRelatedUser();
                                         obj._id = _id;
                                     }
-                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
@@ -430,7 +426,6 @@ public class PPApplication extends Application {
                                         obj = new RMRelatedUser();
                                         obj._id = _id;
                                     }
-                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
@@ -512,7 +507,6 @@ public class PPApplication extends Application {
                                         obj = new RMRelatedUser();
                                         obj._id = _id;
                                     }
-                                    obj.username = ppFromString(itemStr, "targetUserId.username").getAsString();
                                     obj.nickname = ppFromString(itemStr, "targetUserId.nickname").getAsString();
                                     obj.sex = ppFromString(itemStr, "targetUserId.sex").getAsString();
                                     obj.avatar = ppFromString(itemStr, "targetUserId.avatar").getAsString();
@@ -601,13 +595,11 @@ public class PPApplication extends Application {
                                     }
 
                                     Log.v("ppLog", "ppt4");
-                                    obj.ownerUserId = ppFromString(itemStr, "ownerUserId._id").getAsString();
+                                    obj.ownerUserId = ppFromString(itemStr, "ownerUserId").getAsString();
                                     Log.v("ppLog", "ppt5");
-                                    obj.ownerUsername = ppFromString(itemStr, "ownerUserId.username").getAsString();
                                     Log.v("ppLog", "ppt6");
-                                    obj.targetUserId = ppFromString(itemStr, "targetUserId._id").getAsString();
+                                    obj.targetUserId = ppFromString(itemStr, "targetUserId").getAsString();
                                     Log.v("ppLog", "ppt7");
-                                    obj.targetUsername = ppFromString(itemStr, "targetUserId.username").getAsString();
                                     Log.v("ppLog", "ppt8");
 
                                     // This will update an existing object with the same primary key
@@ -631,7 +623,7 @@ public class PPApplication extends Application {
 
                         String itemStr = item.toString();
 
-                        String _id = ppFromString(itemStr, "targetUserId._id").getAsString();
+                        String _id = ppFromString(itemStr, "targetUserId").getAsString();
                         relatedUserIds.add(_id);
                     }
 
@@ -683,7 +675,6 @@ public class PPApplication extends Application {
         EventBus.getDefault().post(new UserLogout());
         removePrefItem(MY_ID);
         removePrefItem(AUTH_BODY);
-        removePrefItem(USERNAME);
         removePrefItem(NICKNAME);
         removePrefItem(AVATAR);
 

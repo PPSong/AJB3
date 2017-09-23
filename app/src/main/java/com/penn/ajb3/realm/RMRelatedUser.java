@@ -13,7 +13,6 @@ import io.realm.annotations.PrimaryKey;
 public class RMRelatedUser extends RealmObject {
     @PrimaryKey
     public String _id;
-    public String username;
     public String nickname;
     public String sex;
     public String avatar;
@@ -29,14 +28,6 @@ public class RMRelatedUser extends RealmObject {
 
     public void set_id(String _id) {
         this._id = _id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getNickname() {

@@ -11,7 +11,5 @@ public class RMBlockUser extends RealmObject {
     @PrimaryKey
     public String _id;
     public String ownerUserId;
-    public String ownerUsername;
     public String targetUserId;
-    public String targetUsername;
 }

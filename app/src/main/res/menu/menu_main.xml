@@ -27,4 +27,14 @@
         android:orderInCategory="100"
         android:title="me"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/block_many"
+        android:orderInCategory="100"
+        android:title="block_many"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/unblock_many"
+        android:orderInCategory="100"
+        android:title="unblock_many"
+        app:showAsAction="never" />
 </menu>

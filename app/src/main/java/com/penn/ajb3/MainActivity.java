@@ -25,7 +25,9 @@ import android.widget.TextView;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
+import com.google.gson.JsonArray;
 import com.penn.ajb3.databinding.ActivityMainBinding;
+import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMMyProfile;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
@@ -39,6 +41,7 @@ import java.net.Socket;
 import java.net.URISyntaxException;
 
 import io.reactivex.Observable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.realm.OrderedCollectionChangeSet;
 import io.realm.OrderedRealmCollectionChangeListener;
@@ -154,6 +157,14 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_me) {
             Intent intent = new Intent(this, MeActivity.class);
             startActivity(intent);
+
+            return true;
+        } else if (id == R.id.block_many) {
+            blockMany();
+
+            return true;
+        } else if (id == R.id.unblock_many) {
+            unblockMany();
 
             return true;
         } else if (id == R.id.action_logout) {
@@ -283,5 +294,32 @@ public class MainActivity extends AppCompatActivity {
                         + ","
                         + realm.where(RMRelatedUser.class).equalTo("isFriends", true).count()
         );
+    }
+
+    private void blockMany() {
+        Observable<String> result = PPRetrofit.getInstance().getPPService().block(genOtherUsers().toString());
+
+        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, null);
+    }
+
+    private void unblockMany() {
+        Observable<String> result = PPRetrofit.getInstance().getPPService().unBlock(genOtherUsers().toString());
+
+        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, null);
+    }
+
+    private JsonArray genOtherUsers() {
+        //创建otherUsers
+        JsonArray otherUsers = new JsonArray();
+        for (int i = 1; i <= 1000; i++) {
+            String tmpUser = "u" + i;
+            if (tmpUser.equals(PPApplication.getPrefStringValue(PPApplication.MY_ID, ""))) {
+                continue;
+            } else {
+                otherUsers.add(tmpUser);
+            }
+        }
+
+        return otherUsers;
     }
 }

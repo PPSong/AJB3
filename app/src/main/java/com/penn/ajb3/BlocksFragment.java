@@ -12,12 +12,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.gson.JsonArray;
 import com.penn.ajb3.databinding.BlocksUserCellBinding;
 import com.penn.ajb3.databinding.FragmentBlocksBinding;
 import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -96,7 +98,10 @@ public class BlocksFragment extends Fragment {
                             rvAdapter.notifyItemChanged(index);
                         }
 
-                        Observable<String> result = PPRetrofit.getInstance().getPPService().unBlock(curUserId);
+                        JsonArray userIds = new JsonArray();
+                        userIds.add(curUserId);
+
+                        Observable<String> result = PPRetrofit.getInstance().getPPService().unBlock(userIds.toString());
 
                         Action callFinal = new Action() {
                             @Override
@@ -208,7 +213,7 @@ public class BlocksFragment extends Fragment {
 
     private void setup() {
         realm = Realm.getDefaultInstance();
-        data = realm.where(RMBlockUser.class).equalTo("ownerUserId", PPApplication.getPrefStringValue(PPApplication.MY_ID, "")).findAllSorted("targetUsername", Sort.DESCENDING);
+        data = realm.where(RMBlockUser.class).equalTo("ownerUserId", PPApplication.getPrefStringValue(PPApplication.MY_ID, "")).findAllSorted("targetUserId", Sort.DESCENDING);
 
         data.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMBlockUser>>() {
             @Override

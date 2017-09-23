@@ -1,5 +1,7 @@
 package com.penn.ajb3.util;
 
+import java.util.ArrayList;
+
 import io.reactivex.Observable;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -17,12 +19,12 @@ public interface PPService {
     @FormUrlEncoded
     @POST("users/login")
     Observable<String> login(
-            @Field("username") String username,
+            @Field("_id") String _id,
             @Field("password") String password
     );
 
-    @POST("getOtherUsers/{afterUsername}")
-    Observable<String> getOtherUsers(@Path("afterUsername") String afterUsername);
+    @POST("getOtherUsers/{afterUserId}")
+    Observable<String> getOtherUsers(@Path("afterUserId") String afterUserId);
 
     @POST("getNewFollows/{startTime}")
     Observable<String> getNewFollows(@Path("startTime") long startTime);
@@ -48,11 +50,13 @@ public interface PPService {
     @POST("follow/{userId}")
     Observable<String> follow(@Path("userId") String userId);
 
-    @POST("block/{userId}")
-    Observable<String> block(@Path("userId") String userId);
+    @FormUrlEncoded
+    @POST("block")
+    Observable<String> block(@Field("userIds") String userIds);
 
-    @POST("unBlock/{userId}")
-    Observable<String> unBlock(@Path("userId") String userId);
+    @FormUrlEncoded
+    @POST("unBlock")
+    Observable<String> unBlock(@Field("userIds") String userIds);
 
     @POST("getQiniuToken")
     Observable<String> getQiniuToken();

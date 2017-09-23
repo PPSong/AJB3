@@ -10,7 +10,6 @@ import io.realm.annotations.PrimaryKey;
 public class RMMyProfile extends RealmObject {
     @PrimaryKey
     public String _id;
-    public String username;
     public String nickname;
     public String sex;
     public String avatar;
