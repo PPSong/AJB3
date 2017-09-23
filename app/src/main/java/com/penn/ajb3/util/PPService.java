@@ -85,6 +85,12 @@ public interface PPService {
     @POST("deleteComment/{momentId}")
     Observable<String> deleteComment(@Path("momentId") String momentId);
 
+    @POST("likeMoment/{momentId}")
+    Observable<String> likeMoment(@Path("momentId") String momentId);
+
+    @POST("unLikeMoment/{momentId}")
+    Observable<String> unLikeMoment(@Path("momentId") String momentId);
+
     @POST("test")
     Observable<String> test();
 }

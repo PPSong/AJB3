@@ -29,6 +29,7 @@ import com.penn.ajb3.messageEvent.UserLogout;
 import com.penn.ajb3.messageEvent.UserSignIn;
 import com.penn.ajb3.realm.RMBlockUser;
 import com.penn.ajb3.realm.RMMyProfile;
+import com.penn.ajb3.realm.RMNearMoment;
 import com.penn.ajb3.realm.RMRelatedUser;
 import com.penn.ajb3.util.PPRetrofit;
 import com.qiniu.android.common.FixedZone;
@@ -710,8 +711,41 @@ public class PPApplication extends Application {
         public void accept(@NonNull final Object s) {
             //do nothing
             Log.v("ppLog", "callSuccess:" + s.toString());
+            processResponseToLocalDB(s);
         }
     };
+
+    private static void changeMomentLike(final String momentId, final boolean like) {
+        try (Realm realm = Realm.getDefaultInstance()) {
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    RMNearMoment obj = realm.where(RMNearMoment.class).equalTo("_id", momentId).findFirst();
+
+                    if (obj != null) {
+                        obj.like = like;
+                    }
+                }
+            });
+        }
+    }
+
+    private static void processResponseToLocalDB(Object sObj) {
+        String s = sObj.toString();
+        String apiName = ppFromString(s, "apiName", PPValueType.STRING).getAsString();
+
+        if (!(TextUtils.isEmpty(apiName))) {
+            switch (apiName) {
+                case "likeMoment":
+                    changeMomentLike(ppFromString(s, "momentId").getAsString(), true);
+                    break;
+                case "unLikeMoment":
+                    changeMomentLike(ppFromString(s, "momentId").getAsString(), false);
+                default:
+                    break;
+            }
+        }
+    }
 
     public static Consumer<Throwable> callFailure = new Consumer<Throwable>() {
         @Override

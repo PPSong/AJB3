@@ -61,6 +61,8 @@ import static com.penn.ajb3.PPApplication.ppFromString;
  */
 public class NearMomentsFragment extends Fragment {
 
+    private Set<String> objWaiting = new HashSet<String>();
+
     private boolean destroyed;
 
     private static final int pageSize = 10;
@@ -183,7 +185,7 @@ public class NearMomentsFragment extends Fragment {
 
         public class NearMomentVH extends RecyclerView.ViewHolder {
             private NearMomentCellBinding binding;
-            private String momentId;
+            private RMNearMoment rmNearMoment;
 
             public NearMomentVH(NearMomentCellBinding binding) {
                 super(binding.getRoot());
@@ -198,23 +200,80 @@ public class NearMomentsFragment extends Fragment {
                 binding.mainIv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        //保存点击时的userId
-                        final String curMomentId = momentId;
 
                         Intent intent = new Intent(getContext(), MomentDetailActivity.class);
-                        intent.putExtra("momentId", curMomentId);
+                        intent.putExtra("momentId", rmNearMoment._id);
 
                         getContext().startActivity(intent);
                     }
                 });
+
+                binding.likeTv.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        //如果在此momentId在objWaiting中, curMomentId
+                        Log.v("ppLog", "check:" + rmNearMoment._id);
+                        if (objWaiting.contains(rmNearMoment._id)) {
+                            Log.v("ppLog", "稍等下, 不要重复点击");
+                            return;
+                        }
+
+                        objWaiting.add(rmNearMoment._id);
+                        Log.v("ppLog", "added:" + rmNearMoment._id);
+                        int index = -1;
+                        for (int i = 0; i < data.size(); i++) {
+                            RMNearMoment rmNearMoment = data.get(i);
+                            if (rmNearMoment._id.equals(rmNearMoment._id)) {
+                                index = i;
+                                break;
+                            }
+                        }
+
+                        if (index > -1) {
+                            rvAdapter.notifyItemChanged(index);
+                        }
+
+                        Observable<String> result = rmNearMoment.toggleLike();
+
+                        Action callFinal = new Action() {
+                            @Override
+                            public void run() throws Exception {
+                                objWaiting.remove(rmNearMoment._id);
+                                Log.v("ppLog", "removed:" + rmNearMoment._id);
+                                int index = -1;
+                                for (int i = 0; i < data.size(); i++) {
+                                    RMNearMoment rmNearMoment = data.get(i);
+                                    if (rmNearMoment._id.equals(rmNearMoment._id)) {
+                                        index = i;
+                                        break;
+                                    }
+                                }
+
+                                if (index > -1) {
+                                    rvAdapter.notifyItemChanged(index);
+                                }
+                            }
+                        };
+
+                        PPApplication.apiRequest(result, PPApplication.callSuccess, PPApplication.callFailure, callFinal);
+                    }
+                });
             }
 
-            public void bind(RMNearMoment rmNearMoment) {
+            public void bind(RMNearMoment tmpRmNearMoment) {
                 Log.v("ppLog", "bind");
                 //一定要加下面这句, 把记录从realm中copy出来成为unmanaged object, 以防止在setData过程中原来的记录被删除而导致程序崩溃
-                RMNearMoment tmp = realm.copyFromRealm(rmNearMoment);
-                binding.setData(tmp);
-                momentId = tmp._id;
+                rmNearMoment = realm.copyFromRealm(tmpRmNearMoment);
+                binding.setData(rmNearMoment);
+
+                if (objWaiting.contains(rmNearMoment._id)) {
+                    Log.v("ppLog", "waiting");
+                    binding.pb.setVisibility(View.VISIBLE);
+                } else {
+                    Log.v("ppLog", "unwaiting");
+                    binding.pb.setVisibility(View.INVISIBLE);
+                }
             }
         }
     }
@@ -417,6 +476,7 @@ public class NearMomentsFragment extends Fragment {
                                 obj.avatar = ppFromString(itemStr, "userId.avatar").getAsString();
                                 obj.body = ppFromString(itemStr, "body").getAsString();
                                 obj.image = ppFromString(itemStr, "image").getAsString();
+                                obj.like = ppFromString(itemStr, "like").getAsBoolean();
                                 obj.createTime = ppFromString(itemStr, "createTime").getAsLong();
 
                                 realm.copyToRealmOrUpdate(obj);
