@@ -126,9 +126,9 @@ public class SocketService extends Service {
             public void run() {
                 try {
                     if (socket != null && socket.connected()) {
-                        String username = PPApplication.getPrefStringValue("USERNAME", "NONE");
-                        if (!(username.equals("NONE"))) {
-                            socket.emit("heartBeat", username);
+                        String myId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE");
+                        if (!(myId.equals("NONE"))) {
+                            socket.emit("heartBeat", myId);
                         }
                     }
                 } catch (Exception err) {
@@ -141,9 +141,9 @@ public class SocketService extends Service {
             }
         };
 
-        //在强行退出或手机重启后, 如果getPrefStringValue中"USERNAME"有值, 说明在用户已在登录状态
-        String username = PPApplication.getPrefStringValue("USERNAME", "NONE");
-        if (!(username.equals("NONE"))) {
+        //在强行退出或手机重启后, 如果getPrefStringValue中MY_ID有值, 说明在用户已在登录状态
+        String myId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE");
+        if (!(myId.equals("NONE"))) {
             startSocket();
         }
     }

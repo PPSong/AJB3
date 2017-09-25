@@ -211,6 +211,7 @@ public class PPApplication extends Application {
     }
 
     public static void initLocalData(String userId) {
+        Log.v("ppLog", "initLocalData");
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .deleteRealmIfMigrationNeeded()
                 .name(userId + ".realm")
@@ -776,13 +777,15 @@ public class PPApplication extends Application {
                     Log.v("ppLog", errorBodyString);
                     int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
                     if (code < 0) {
+                        if (code == -1000) {
+                            Log.v("ppLog", "-1000");
+                            PPApplication.logout();
+                        }
+                        Log.v("ppLog", "用户自定义错误");
                         //用户自定义错误
                         String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
                         Log.v("ppLog", "http exception:" + error);
                         PPApplication.showError("http exception:" + error);
-                        if (code == -1000) {
-                            PPApplication.logout();
-                        }
                     } else {
                         //http常规错误
                         Log.v("ppLog", "http exception:" + errorBodyString);
@@ -823,13 +826,13 @@ public class PPApplication extends Application {
                             Log.v("ppLog", errorBodyString);
                             int code = PPApplication.ppFromString(errorBodyString, "code", PPApplication.PPValueType.INT).getAsInt();
                             if (code < 0) {
+                                if (code == -1000) {
+                                    PPApplication.logout();
+                                }
                                 //用户自定义错误
                                 String error = PPApplication.ppFromString(errorBodyString, "error").getAsString();
                                 Log.v("ppLog", "http exception:" + error);
                                 PPApplication.showError("http exception:" + error);
-                                if (code == -1000) {
-                                    PPApplication.logout();
-                                }
                             } else {
                                 //http常规错误
                                 Log.v("ppLog", "http exception:" + errorBodyString);
