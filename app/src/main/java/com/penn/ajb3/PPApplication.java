@@ -210,10 +210,10 @@ public class PPApplication extends Application {
         }
     }
 
-    public static void initLocalData(String username) {
+    public static void initLocalData(String userId) {
         RealmConfiguration config = new RealmConfiguration.Builder()
                 .deleteRealmIfMigrationNeeded()
-                .name(username + ".realm")
+                .name(userId + ".realm")
                 .build();
 
         boolean clearData = false;

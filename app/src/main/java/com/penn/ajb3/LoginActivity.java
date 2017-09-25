@@ -225,6 +225,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     PPApplication.setPrefStringValue(PPApplication.NICKNAME, nickname);
                     String avatar = PPApplication.ppFromString(s, "avatar").getAsString();
                     PPApplication.setPrefStringValue(PPApplication.AVATAR, avatar);
+                    PPApplication.initLocalData(myId);
                     EventBus.getDefault().post(new UserSignIn());
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
