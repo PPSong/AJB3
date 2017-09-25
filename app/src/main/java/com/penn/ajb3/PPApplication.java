@@ -382,7 +382,7 @@ public class PPApplication extends Application {
             }
         };
 
-        apiRequest(result, callSuccess, PPApplication.callFailure, null);
+        apiRequest(result, callSuccess, PPApplication.callFailure, null, true);
     }
 
     public static void getNewFans() {
@@ -462,7 +462,7 @@ public class PPApplication extends Application {
             }
         };
 
-        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null, true);
     }
 
     public static void getNewFriends() {
@@ -543,7 +543,7 @@ public class PPApplication extends Application {
             }
         };
 
-        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null, true);
     }
 
     public static void getNewBlocks() {
@@ -634,7 +634,7 @@ public class PPApplication extends Application {
             }
         };
 
-        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null);
+        PPApplication.apiRequest(result, callSuccess, PPApplication.callFailure, null, true);
     }
 
     public static void getPush(String type) {
@@ -691,7 +691,7 @@ public class PPApplication extends Application {
         }
     }
 
-    public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
+    public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction, boolean newThread) {
         if (finalAction == null) {
             finalAction = new Action() {
                 @Override
@@ -701,10 +701,21 @@ public class PPApplication extends Application {
             };
         }
 
-        result.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doFinally(finalAction)
-                .subscribe(callSuccess, callFailure);
+        if (newThread) {
+            result.subscribeOn(Schedulers.newThread())
+                    .observeOn(Schedulers.newThread())
+                    .doFinally(finalAction)
+                    .subscribe(callSuccess, callFailure);
+        } else {
+            result.subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doFinally(finalAction)
+                    .subscribe(callSuccess, callFailure);
+        }
+    }
+
+    public static void apiRequest(Observable<String> result, Consumer<Object> callSuccess, Consumer<Throwable> callFailure, Action finalAction) {
+        apiRequest(result, callSuccess, callFailure, finalAction, false);
     }
 
     public static Consumer<Object> callSuccess = new Consumer<Object>() {

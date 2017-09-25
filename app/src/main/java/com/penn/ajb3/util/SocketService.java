@@ -85,7 +85,10 @@ public class SocketService extends Service {
             @Override
             public void call(Object... args) {
                 Log.v("ppLog", "EVENT_CONNECT");
-                PPApplication.reconnectToServer();
+                String myId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE");
+                if (!(myId.equals("NONE"))) {
+                    PPApplication.reconnectToServer();
+                }
             }
 
         });

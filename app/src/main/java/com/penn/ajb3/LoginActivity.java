@@ -116,7 +116,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
-        if (!(PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE").equals("NONE"))) {
+        String myId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE");
+        if (!(myId.equals("NONE"))) {
+            PPApplication.initLocalData(myId);
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
         }
