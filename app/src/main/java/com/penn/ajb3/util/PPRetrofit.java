@@ -19,7 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class PPRetrofit {
     private static PPRetrofit instance = null;
-    public static final String BASE = "http://10.0.13.238";
+    public static final String BASE = "http://10.0.13.237";
 //    public static final String BASE = "http://192.168.10.71";
 //    public static final String BASE = "http://10.0.13.238";
     public static final String BASE_URL = BASE + ":3000/";

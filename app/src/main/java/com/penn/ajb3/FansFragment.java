@@ -194,6 +194,7 @@ public class FansFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.v("ppLog", "fans fragment onCreate");
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_fans, container, false);
         View view = binding.getRoot();
 
@@ -212,7 +213,9 @@ public class FansFragment extends Fragment {
 
     private void setup() {
         realm = Realm.getDefaultInstance();
+        Log.v("ppLog", "realm name:" + Realm.getDefaultConfiguration().getRealmFileName());
         data = realm.where(RMRelatedUser.class).equalTo("isFans", true).findAllSorted("updateTime", Sort.DESCENDING);
+        Log.v("ppLog", "data size:" + data.size());
 
         data.addChangeListener(new OrderedRealmCollectionChangeListener<RealmResults<RMRelatedUser>>() {
             @Override

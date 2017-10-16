@@ -85,6 +85,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.v("ppLog", "Login onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         startService(new Intent(this, SocketService.class));

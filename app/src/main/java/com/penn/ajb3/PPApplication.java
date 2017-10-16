@@ -672,6 +672,12 @@ public class PPApplication extends Application {
         Realm.init(appContext);
 
         uuid = Settings.Secure.getString(appContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+
+        //以下这段initLocalData一定要加, 防止在程序在非login页面强行退出后, app重新启动回到原来的非login页面但是没有触发initLocalData, 导致用了default reaml db
+        String myId = PPApplication.getPrefStringValue(PPApplication.MY_ID, "NONE");
+        if (!(myId.equals("NONE"))) {
+            PPApplication.initLocalData(myId);
+        }
     }
 
     public static void logout() {
