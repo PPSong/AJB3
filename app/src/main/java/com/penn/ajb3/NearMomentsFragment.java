@@ -221,18 +221,19 @@ public class NearMomentsFragment extends Fragment {
 
                         objWaiting.add(rmNearMoment._id);
                         Log.v("ppLog", "added:" + rmNearMoment._id);
-                        int index = -1;
-                        for (int i = 0; i < data.size(); i++) {
-                            RMNearMoment rmNearMoment = data.get(i);
-                            if (rmNearMoment._id.equals(rmNearMoment._id)) {
-                                index = i;
-                                break;
-                            }
-                        }
-
-                        if (index > -1) {
-                            rvAdapter.notifyItemChanged(index);
-                        }
+//                        int index = -1;
+//                        for (int i = 0; i < data.size(); i++) {
+//                            RMNearMoment tmpNearMoment = data.get(i);
+//                            if (tmpNearMoment._id.equals(rmNearMoment._id)) {
+//                                index = i;
+//                                break;
+//                            }
+//                        }
+//
+//                        Log.v("ppLog", "index1:" + index);
+//                        if (index > -1) {
+//                            rvAdapter.notifyItemChanged(index);
+//                        }
 
                         Observable<String> result = rmNearMoment.toggleLike();
 
@@ -241,18 +242,19 @@ public class NearMomentsFragment extends Fragment {
                             public void run() throws Exception {
                                 objWaiting.remove(rmNearMoment._id);
                                 Log.v("ppLog", "removed:" + rmNearMoment._id);
-                                int index = -1;
-                                for (int i = 0; i < data.size(); i++) {
-                                    RMNearMoment rmNearMoment = data.get(i);
-                                    if (rmNearMoment._id.equals(rmNearMoment._id)) {
-                                        index = i;
-                                        break;
-                                    }
-                                }
-
-                                if (index > -1) {
-                                    rvAdapter.notifyItemChanged(index);
-                                }
+//                                int index = -1;
+//                                for (int i = 0; i < data.size(); i++) {
+//                                    RMNearMoment tmpNearMoment = data.get(i);
+//                                    if (tmpNearMoment._id.equals(rmNearMoment._id)) {
+//                                        index = i;
+//                                        break;
+//                                    }
+//                                }
+//
+//                                Log.v("ppLog", "index2:" + index);
+//                                if (index > -1) {
+//                                    rvAdapter.notifyItemChanged(index);
+//                                }
                             }
                         };
 
